@@ -164,7 +164,7 @@ Si algo no está aquí, **se pregunta antes de instalarlo**.
 - **Listo cuando:** un `docker compose up --build` en limpio deja ambos servicios `healthy`
   y `/admin/` carga.
 
-### Fase 2 — Modelos + admin
+### Fase 2 — Modelos + admin ✅
 **Objetivo:** el dominio de la clínica modelado y administrable.
 - `Patient`, `Dentist`, `Service` (nombre, duración, precio), `Appointment`
   (paciente, dentista, servicio, inicio, fin, estado: `pending → confirmed → completed`, o `cancelled`).
