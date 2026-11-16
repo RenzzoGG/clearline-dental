@@ -8,7 +8,7 @@ Uses no dev-only dependencies so it can also run in production for a demo.
 """
 
 import random
-from datetime import date, datetime, time, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.core.management.base import BaseCommand
@@ -16,6 +16,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.appointments.models import Appointment
+from apps.appointments.schedule import SLOT_INTERVAL, opening_hours
 from apps.clinic.models import Dentist, Patient, Service
 
 DENTISTS = [
@@ -46,10 +47,6 @@ LAST_NAMES = (
 PATIENT_COUNT = 40
 DAYS_BACK = 14
 DAYS_AHEAD = 14
-OPENING = time(9, 0)
-CLOSING = time(18, 0)
-SLOT_STEP = timedelta(minutes=15)
-SUNDAY = 6
 
 
 class Command(BaseCommand):
@@ -134,22 +131,22 @@ class Command(BaseCommand):
         return Patient.objects.bulk_create(patients)
 
     def _create_appointments(self, rng, dentists, services, patients) -> int:
-        tz = timezone.get_current_timezone()
         now = timezone.now()
         today = timezone.localdate()
         appointments = []
 
         for offset in range(-DAYS_BACK, DAYS_AHEAD + 1):
             day = today + timedelta(days=offset)
-            if day.weekday() == SUNDAY:
+            hours = opening_hours(day)
+            if hours is None:
                 continue
-            closing = datetime.combine(day, CLOSING, tzinfo=tz)
+            opening, closing = hours
 
             for dentist in dentists:
-                cursor = datetime.combine(day, OPENING, tzinfo=tz)
+                cursor = opening
                 while True:
                     # Leave random gaps so the schedule is not 100% booked.
-                    cursor += SLOT_STEP * rng.choice([0, 0, 1, 2, 4])
+                    cursor += SLOT_INTERVAL * rng.choice([0, 0, 1, 2, 4])
                     service = rng.choice(services)
                     ends_at = cursor + timedelta(minutes=service.duration_minutes)
                     if ends_at > closing:
