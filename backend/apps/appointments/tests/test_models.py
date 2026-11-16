@@ -149,3 +149,21 @@ def test_database_rejects_end_before_start():
 
     with pytest.raises(IntegrityError), transaction.atomic():
         Appointment.objects.filter(pk=appointment.pk).update(ends_at=at(8))
+
+
+# --- __str__ ------------------------------------------------------------------
+
+
+def test_str_shows_start_in_clinic_local_time():
+    appointment = AppointmentFactory(
+        starts_at=at(9),
+        patient__first_name="Ana",
+        patient__last_name="Lopez",
+        dentist__first_name="Sofia",
+        dentist__last_name="Ramirez",
+    )
+    # Datetimes loaded from the database come back in UTC (09:00 CST == 15:00 UTC),
+    # which is how the admin sees them.
+    appointment.refresh_from_db()
+
+    assert str(appointment) == "Ana Lopez with Dr. Sofia Ramirez at 2030-06-10 09:00"

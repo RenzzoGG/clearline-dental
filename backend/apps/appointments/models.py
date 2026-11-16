@@ -4,6 +4,7 @@ from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import DateTimeRangeField, RangeBoundary, RangeOperators
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 from apps.clinic.models import Dentist, Patient, Service
 from apps.core.models import TimeStampedModel
@@ -59,7 +60,9 @@ class Appointment(TimeStampedModel):
         ]
 
     def __str__(self) -> str:
-        return f"{self.patient} with {self.dentist} at {self.starts_at:%Y-%m-%d %H:%M}"
+        # Values loaded from the DB are in UTC; show them in the clinic's local time.
+        starts_at = timezone.localtime(self.starts_at)
+        return f"{self.patient} with {self.dentist} at {starts_at:%Y-%m-%d %H:%M}"
 
     def compute_ends_at(self):
         return self.starts_at + timedelta(minutes=self.service.duration_minutes)
