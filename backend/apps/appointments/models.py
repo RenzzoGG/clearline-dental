@@ -12,6 +12,10 @@ from apps.core.models import TimeStampedModel
 OVERLAP_ERROR = "This dentist already has an appointment that overlaps with this time."
 
 
+class InvalidTransition(Exception):
+    """Raised when a status change is not allowed by the appointment lifecycle."""
+
+
 class TsTzRange(models.Func):
     """SQL ``TSTZRANGE(start, end, '[)')``: a timestamptz range for the exclusion constraint."""
 
@@ -25,6 +29,14 @@ class Appointment(TimeStampedModel):
         CONFIRMED = "confirmed", "Confirmed"
         COMPLETED = "completed", "Completed"
         CANCELLED = "cancelled", "Cancelled"
+
+    # pending -> confirmed -> completed; pending/confirmed -> cancelled. Final states stay final.
+    ALLOWED_TRANSITIONS = {
+        Status.PENDING: frozenset({Status.CONFIRMED, Status.CANCELLED}),
+        Status.CONFIRMED: frozenset({Status.COMPLETED, Status.CANCELLED}),
+        Status.COMPLETED: frozenset(),
+        Status.CANCELLED: frozenset(),
+    }
 
     patient = models.ForeignKey(Patient, on_delete=models.PROTECT, related_name="appointments")
     dentist = models.ForeignKey(Dentist, on_delete=models.PROTECT, related_name="appointments")
@@ -63,6 +75,19 @@ class Appointment(TimeStampedModel):
         # Values loaded from the DB are in UTC; show them in the clinic's local time.
         starts_at = timezone.localtime(self.starts_at)
         return f"{self.patient} with {self.dentist} at {starts_at:%Y-%m-%d %H:%M}"
+
+    @property
+    def is_final(self) -> bool:
+        return not self.ALLOWED_TRANSITIONS[self.status]
+
+    def transition_to(self, new_status: str, *, now=None) -> None:
+        """Change status following the lifecycle rules, and persist it."""
+        if new_status not in self.ALLOWED_TRANSITIONS[self.status]:
+            raise InvalidTransition(f"Cannot change a {self.status} appointment to {new_status}.")
+        if new_status == self.Status.COMPLETED and self.starts_at > (now or timezone.now()):
+            raise InvalidTransition("An appointment cannot be completed before it starts.")
+        self.status = new_status
+        self.save(update_fields=["status", "updated_at"])
 
     def compute_ends_at(self):
         return self.starts_at + timedelta(minutes=self.service.duration_minutes)
