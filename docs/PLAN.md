@@ -148,11 +148,11 @@ Si algo no está aquí, **se pregunta antes de instalarlo**.
 
 ## Fases
 
-### Fase 0 — Planeación ✅ (esta)
+### Fase 0 — Planeación ✅
 - `CLAUDE.md` con reglas, `.claude/settings.json` (deny `git push`, `rm -rf`, leer `.env`),
   `.gitignore`, este plan.
 
-### Fase 1 — Base con Docker
+### Fase 1 — Base con Docker ✅
 **Objetivo:** `docker compose up --build` levanta Django + Postgres listos para trabajar.
 - Proyecto Django en `backend/` con `uv` y `pyproject.toml`.
 - **User personalizado** (`accounts.User`) creado *antes* de la primera migración
