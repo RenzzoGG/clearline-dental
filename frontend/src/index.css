@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-brand-50: #effaf8;
+  --color-brand-100: #d6f2ec;
+  --color-brand-200: #aee4d9;
+  --color-brand-300: #7ccfc1;
+  --color-brand-400: #4cb3a5;
+  --color-brand-500: #2f978a;
+  --color-brand-600: #227a70;
+  --color-brand-700: #1b625b;
+  --color-brand-800: #144f4a;
+  --color-brand-900: #0b3b37;
+  --color-brand-950: #062523;
+
+  --color-mint-50: #f2fbf7;
+  --color-mint-100: #e1f6ec;
+  --color-mint-200: #c3ecd9;
+  --color-mint-300: #96dcbd;
+
+  --color-coral-50: #fff4f1;
+  --color-coral-100: #ffe4dc;
+  --color-coral-400: #ff8f72;
+  --color-coral-500: #f4704f;
+  --color-coral-600: #de5636;
+
+  --color-ink-50: #f6f8f9;
+  --color-ink-100: #eceff2;
+  --color-ink-200: #d9dfe4;
+  --color-ink-300: #b7c1c9;
+  --color-ink-400: #8a98a4;
+  --color-ink-500: #66747f;
+  --color-ink-600: #4d5963;
+  --color-ink-700: #3a444c;
+  --color-ink-800: #252d33;
+  --color-ink-900: #151b20;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-white font-sans text-ink-800;
+  }
+  :focus-visible {
+    outline-color: var(--color-brand-500);
+  }
+}
