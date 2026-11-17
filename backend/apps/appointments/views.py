@@ -17,7 +17,10 @@ from .serializers import (
     AppointmentSerializer,
     AvailabilityQuerySerializer,
     AvailabilitySerializer,
+    StatsQuerySerializer,
+    StatsSerializer,
 )
+from .stats import appointment_stats
 
 OVERLAP_CONSTRAINT = "appointment_no_dentist_overlap"
 
@@ -129,3 +132,14 @@ class AvailabilityView(APIView):
             "slots": available_slots(dentist, service, day),
         }
         return Response(AvailabilitySerializer(data).data)
+
+
+class StatsView(APIView):
+    """Dashboard metrics for a date range (clinic local dates). Staff only (default)."""
+
+    @extend_schema(parameters=[StatsQuerySerializer], responses=StatsSerializer)
+    def get(self, request):
+        query = StatsQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+        data = appointment_stats(query.validated_data["date_from"], query.validated_data["date_to"])
+        return Response(StatsSerializer(data).data)

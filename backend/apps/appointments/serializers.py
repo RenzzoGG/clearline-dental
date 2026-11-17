@@ -110,3 +110,48 @@ class AvailabilitySerializer(serializers.Serializer):
     service = serializers.IntegerField()
     duration_minutes = serializers.IntegerField()
     slots = SlotSerializer(many=True)
+
+
+MAX_STATS_DAYS = 366
+
+
+class StatsQuerySerializer(serializers.Serializer):
+    date_from = serializers.DateField()
+    date_to = serializers.DateField()
+
+    def validate(self, attrs):
+        span = (attrs["date_to"] - attrs["date_from"]).days
+        if span < 0:
+            raise serializers.ValidationError({"date_to": "Must be on or after date_from."})
+        if span >= MAX_STATS_DAYS:
+            raise serializers.ValidationError(
+                {"date_to": f"The range cannot exceed {MAX_STATS_DAYS} days."}
+            )
+        return attrs
+
+
+class DayCountSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    count = serializers.IntegerField()
+
+
+class ServiceCountSerializer(serializers.Serializer):
+    service = serializers.CharField()
+    count = serializers.IntegerField()
+
+
+class StatusCountsSerializer(serializers.Serializer):
+    pending = serializers.IntegerField()
+    confirmed = serializers.IntegerField()
+    completed = serializers.IntegerField()
+    cancelled = serializers.IntegerField()
+
+
+class StatsSerializer(serializers.Serializer):
+    date_from = serializers.DateField()
+    date_to = serializers.DateField()
+    total = serializers.IntegerField()
+    by_status = StatusCountsSerializer()
+    cancellation_rate = serializers.FloatField()
+    by_day = DayCountSerializer(many=True)
+    by_service = ServiceCountSerializer(many=True)
