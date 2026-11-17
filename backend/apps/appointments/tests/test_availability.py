@@ -96,8 +96,8 @@ def test_availability_endpoint_is_public(api_client, dentist, service):
     assert response.status_code == status.HTTP_200_OK
     assert response.data["duration_minutes"] == 30
     assert response.data["slots"][0] == {
-        "starts_at": "2030-06-10T09:00:00-06:00",
-        "ends_at": "2030-06-10T09:30:00-06:00",
+        "starts_at": at(9).isoformat(),
+        "ends_at": at(9, 30).isoformat(),
     }
 
 

@@ -162,8 +162,8 @@ def test_str_shows_start_in_clinic_local_time():
         dentist__first_name="Sofia",
         dentist__last_name="Ramirez",
     )
-    # Datetimes loaded from the database come back in UTC (09:00 CST == 15:00 UTC),
-    # which is how the admin sees them.
+    # Datetimes loaded from the database come back in UTC (09:00 in Hermosillo is
+    # 16:00 UTC), which is how the admin sees them.
     appointment.refresh_from_db()
 
     assert str(appointment) == "Ana Lopez with Dr. Sofia Ramirez at 2030-06-10 09:00"

@@ -52,7 +52,7 @@ def test_create_appointment(staff_client, payload):
 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["status"] == Status.PENDING
-    assert response.data["ends_at"] == "2030-06-10T09:30:00-06:00"
+    assert response.data["ends_at"] == at(9, 30).isoformat()
     assert response.data["service_name"].startswith("Service")
 
 
@@ -129,7 +129,7 @@ def test_reschedule_appointment(staff_client, dentist, service):
     response = staff_client.patch(detail(appointment), {"starts_at": at(11).isoformat()})
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.data["ends_at"] == "2030-06-10T11:30:00-06:00"
+    assert response.data["ends_at"] == at(11, 30).isoformat()
 
 
 def test_editing_notes_of_a_started_appointment_skips_booking_rules(staff_client):

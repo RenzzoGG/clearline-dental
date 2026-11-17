@@ -95,7 +95,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # --- I18N ---------------------------------------------------------------------
 
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "America/Mexico_City"
+# Clinic local time. Hermosillo is UTC-7 all year (no daylight saving time).
+TIME_ZONE = "America/Hermosillo"
 USE_I18N = True
 USE_TZ = True
 
