@@ -188,7 +188,7 @@ Si algo no está aquí, **se pregunta antes de instalarlo**.
 - CORS para el frontend.
 - Tests de API.
 
-### Fase 4 — Auth JWT + roles
+### Fase 4 — Auth JWT + roles ✅
 **Objetivo:** cada quien ve y hace solo lo que le toca.
 - Login/refresh con SimpleJWT (`/api/auth/token/`, `/api/auth/token/refresh/`), `/api/auth/me/`.
 - Roles: `admin`, `receptionist`, `patient` (campo `role` en `User`).
