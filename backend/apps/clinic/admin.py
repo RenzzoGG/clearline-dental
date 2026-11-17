@@ -5,8 +5,9 @@ from .models import Dentist, Patient, Service
 
 @admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
-    list_display = ["full_name", "email", "phone", "date_of_birth", "created_at"]
+    list_display = ["full_name", "email", "phone", "date_of_birth", "user", "created_at"]
     search_fields = ["first_name", "last_name", "email", "phone"]
+    autocomplete_fields = ["user"]
     readonly_fields = ["created_at", "updated_at"]
 
 
