@@ -134,7 +134,10 @@ Si algo no está aquí, **se pregunta antes de instalarlo**.
 - `date-fns` — fechas
 - Dev/test: `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`,
   `@playwright/test`, `eslint`, `prettier`
-- Gestor de paquetes: `npm` (o `pnpm` si lo prefieres — decídelo en la fase 5)
+- Aprobadas en la fase 5: `@types/react`, `@types/react-dom` (tipos de React 19),
+  `@testing-library/dom` (peer de Testing Library), `@testing-library/user-event`,
+  `typescript-eslint`, `@eslint/js`, `eslint-plugin-react-hooks`, `globals` (ESLint para TS/React)
+- Gestor de paquetes: `npm` (decidido en la fase 5: viene con Node, sin corepack ni pasos extra)
 
 **Infra**
 - Imágenes: `python:3.13-slim`, `node:22-alpine`, `postgres:17-alpine`
