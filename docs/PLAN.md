@@ -177,7 +177,7 @@ Si algo no está aquí, **se pregunta antes de instalarlo**.
 - Comando `seed` con datos ficticios (dentistas, servicios, citas).
 - Tests de modelos con pytest (incluido el de traslape).
 
-### Fase 3 — API REST + docs
+### Fase 3 — API REST + docs ✅
 **Objetivo:** API completa y documentada.
 - Serializers + ViewSets + Routers de DRF para los 4 recursos.
 - Filtros (`?dentist=`, `?status=`, `?date_from=`), paginación.
