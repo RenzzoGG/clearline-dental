@@ -37,6 +37,15 @@ class AppointmentSerializer(serializers.ModelSerializer):
         # Status only changes through the confirm/complete/cancel actions.
         read_only_fields = ["ends_at", "status", "created_at", "updated_at"]
 
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        # Patients always book for themselves: the view sets `patient` on save.
+        if user is not None and user.is_authenticated and not user.is_clinic_staff:
+            fields["patient"].read_only = True
+        return fields
+
     def validate(self, attrs):
         instance = self.instance
         if instance is not None and instance.is_final:

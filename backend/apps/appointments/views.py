@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 
+from apps.accounts.permissions import IsClinicStaff, IsClinicStaffOrPatient
 from apps.core.exceptions import Conflict
 
 from .availability import available_slots
@@ -28,7 +29,13 @@ class AppointmentViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-    """Appointments. No DELETE: appointments are cancelled, never removed."""
+    """Appointments. No DELETE: appointments are cancelled, never removed.
+
+    Staff see and manage everything. Patients list, view, book and cancel only their
+    own appointments; anyone else's appointment is a 404 (row-level filtering).
+    """
+
+    PATIENT_ACTIONS = frozenset({"list", "retrieve", "create", "cancel"})
 
     queryset = Appointment.objects.select_related("patient", "dentist", "service")
     serializer_class = AppointmentSerializer
@@ -37,19 +44,38 @@ class AppointmentViewSet(
     ordering_fields = ["starts_at", "created_at"]
     ordering = ["starts_at"]
 
+    def get_permissions(self):
+        if self.action in self.PATIENT_ACTIONS:
+            return [IsClinicStaffOrPatient()]
+        return [IsClinicStaff()]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if not user.is_authenticated:
+            return queryset.none()  # e.g. schema generation; permissions already block access
+        if user.is_clinic_staff:
+            return queryset
+        # Like a row-level security policy: patients only ever see their own rows.
+        return queryset.filter(patient__user=user)
+
     def perform_create(self, serializer):
-        self._save_guarding_overlap(serializer)
+        user = self.request.user
+        if user.is_clinic_staff:
+            self._save_guarding_overlap(serializer)
+        else:
+            self._save_guarding_overlap(serializer, patient=user.patient_profile)
 
     def perform_update(self, serializer):
         self._save_guarding_overlap(serializer)
 
     @staticmethod
-    def _save_guarding_overlap(serializer):
+    def _save_guarding_overlap(serializer, **extra):
         # clean() already checked overlaps; this catches the race where two requests
         # pass validation at the same time and the database constraint rejects one.
         try:
             with transaction.atomic():
-                serializer.save()
+                serializer.save(**extra)
         except IntegrityError as exc:
             if OVERLAP_CONSTRAINT in str(exc):
                 # Same shape as the error raised by validate() for a normal overlap.

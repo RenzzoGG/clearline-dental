@@ -44,7 +44,7 @@ def payload(dentist, service):
 
 
 def test_anonymous_cannot_list_appointments(api_client):
-    assert api_client.get(URL).status_code == status.HTTP_403_FORBIDDEN
+    assert api_client.get(URL).status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_create_appointment(staff_client, payload):

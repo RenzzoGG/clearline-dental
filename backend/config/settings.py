@@ -3,9 +3,11 @@
 All environment-specific values come from environment variables (see .env.example).
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -18,6 +20,13 @@ env = environ.Env(
 # --- Core ---------------------------------------------------------------------
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
+# The secret key also signs JWTs (HMAC-SHA256); a short one could be brute-forced.
+MIN_SECRET_KEY_LENGTH = 50
+if len(SECRET_KEY) < MIN_SECRET_KEY_LENGTH:
+    raise ImproperlyConfigured(
+        f"DJANGO_SECRET_KEY must be at least {MIN_SECRET_KEY_LENGTH} characters. "
+        'Generate one with: python3 -c "import secrets; print(secrets.token_urlsafe(50))"'
+    )
 DEBUG = env("DJANGO_DEBUG")
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
 
@@ -34,6 +43,7 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     # Local apps
     "apps.core",
     "apps.accounts",
@@ -108,12 +118,13 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # --- REST API -----------------------------------------------------------------
 
 REST_FRAMEWORK = {
-    # Session auth reuses the admin login (handy for Swagger). JWT arrives in phase 4.
+    # JWT for the frontend and the chatbot; session reuses the admin login (Swagger).
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
-    # Secure by default: staff only until roles are added in phase 4.
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAdminUser"],
+    # Secure by default: staff only. Views open up explicitly for patients/public.
+    "DEFAULT_PERMISSION_CLASSES": ["apps.accounts.permissions.IsClinicStaff"],
     "DEFAULT_PAGINATION_CLASS": "apps.core.pagination.StandardPagination",
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
@@ -133,6 +144,15 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "0.3.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    # Each refresh returns a new refresh token and blacklists the old one.
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
 }
 
 # --- CORS ---------------------------------------------------------------------

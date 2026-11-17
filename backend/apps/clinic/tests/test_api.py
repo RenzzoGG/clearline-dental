@@ -16,9 +16,12 @@ SERVICES = "/api/services/"
 # --- access -------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("url", [PATIENTS, DENTISTS, SERVICES])
-def test_anonymous_users_are_rejected(api_client, url):
-    assert api_client.get(url).status_code == status.HTTP_403_FORBIDDEN
+def test_anonymous_users_cannot_list_patients(api_client):
+    # 401 (not 403): JWT is the first authenticator, so DRF asks for credentials.
+    response = api_client.get(PATIENTS)
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.headers["WWW-Authenticate"].startswith("Bearer")
 
 
 def test_non_staff_users_are_rejected(api_client):
@@ -122,10 +125,10 @@ def test_filter_dentists_by_active(staff_client):
     assert response.data["results"][0]["is_active"] is True
 
 
-def test_service_duration_validation(staff_client):
+def test_service_duration_validation(clinic_admin_client):
     payload = {"name": "Quick", "duration_minutes": 2, "price": "10.00"}
 
-    response = staff_client.post(SERVICES, payload)
+    response = clinic_admin_client.post(SERVICES, payload)
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "duration_minutes" in response.data
