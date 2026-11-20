@@ -1,79 +1,90 @@
-import { m, type Variants } from "motion/react";
-import type { ReactNode } from "react";
-
-const EASE = [0.16, 1, 0.3, 1] as const;
-const VIEWPORT = { once: true, margin: "0px 0px -10% 0px" } as const;
-
-const item: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  // `custom` carries an optional delay (the variant's transition overrides the prop's).
-  visible: (delay: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: EASE, delay },
-  }),
-};
-
-// Group children take their delay from the parent's staggerChildren, so no delay here.
-const groupItem: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } },
-};
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 /**
- * Fades/slides content in the first time it scrolls into view. Only opacity and transform
- * are animated (GPU friendly). With reduced motion, MotionConfig drops the movement.
+ * Scroll reveals as CSS transitions + one IntersectionObserver per block (no Motion).
+ *
+ * The element gets `data-revealed` the first time it scrolls into view; the `.reveal` rules
+ * in index.css fade/slide it in (opacity + transform only, compositor-friendly). With motion
+ * off (toggle or prefers-reduced-motion) those rules don't apply and content is simply
+ * visible. Motion's engine is not needed on the landing at all.
  */
+function useRevealedOnce<T extends Element>() {
+  const ref = useRef<T>(null);
+  // Without IntersectionObserver (old browsers, jsdom) content starts revealed.
+  const [revealed, setRevealed] = useState(() => typeof IntersectionObserver === "undefined");
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setRevealed(true);
+        observer.disconnect();
+      },
+      { rootMargin: "0px 0px -10% 0px" },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, revealed };
+}
+
+/** Fades/slides content in the first time it scrolls into view. */
 export function Reveal({
   children,
-  className,
+  className = "",
   delay = 0,
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
 }) {
+  const { ref, revealed } = useRevealedOnce<HTMLDivElement>();
   return (
-    <m.div
-      className={className}
-      initial="hidden"
-      whileInView="visible"
-      viewport={VIEWPORT}
-      variants={item}
-      custom={delay}
+    <div
+      ref={ref}
+      data-revealed={revealed || undefined}
+      style={delay ? { transitionDelay: `${delay}s` } : undefined}
+      className={`reveal ${className}`}
     >
       {children}
-    </m.div>
+    </div>
   );
 }
 
-/** Container whose direct <RevealItem> children appear one after another. */
+/** Container whose <RevealItem> children appear one after another (`index` sets the order). */
 export function RevealGroup({
   children,
-  className,
-  stagger = 0.08,
+  className = "",
 }: {
   children: ReactNode;
   className?: string;
-  stagger?: number;
 }) {
+  const { ref, revealed } = useRevealedOnce<HTMLDivElement>();
   return (
-    <m.div
-      className={className}
-      initial="hidden"
-      whileInView="visible"
-      viewport={VIEWPORT}
-      variants={{ hidden: {}, visible: { transition: { staggerChildren: stagger } } }}
-    >
+    <div ref={ref} data-revealed={revealed || undefined} className={`reveal-group ${className}`}>
       {children}
-    </m.div>
+    </div>
   );
 }
 
-export function RevealItem({ children, className }: { children: ReactNode; className?: string }) {
+export function RevealItem({
+  children,
+  className = "",
+  index = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  index?: number;
+}) {
   return (
-    <m.div className={className} variants={groupItem}>
+    <div
+      className={`reveal-item ${className}`}
+      style={{ "--reveal-index": index } as CSSProperties}
+    >
       {children}
-    </m.div>
+    </div>
   );
 }

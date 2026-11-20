@@ -147,9 +147,7 @@ export default function BookingPage() {
     <section className="overflow-x-clip bg-white py-12 md:py-16">
       {/* Padding inside the max-width box, like the header, so edges line up. */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <h1 className="text-3xl font-extrabold tracking-tight text-ink-900 sm:text-4xl">
-          Book a visit
-        </h1>
+        <h1 className="font-display text-4xl text-ink-900 sm:text-5xl">Book a visit</h1>
         <div className="mt-6">
           <BookingProgress
             step={state.step}

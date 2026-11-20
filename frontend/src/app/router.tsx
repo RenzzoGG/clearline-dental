@@ -34,7 +34,7 @@ function NotFound() {
     <section className="grid min-h-[60vh] place-items-center px-4 text-center">
       <div>
         <p className="text-sm font-semibold text-brand-600">404</p>
-        <h1 className="mt-2 text-3xl font-extrabold text-ink-900">This page doesn&apos;t exist</h1>
+        <h1 className="mt-2 font-display text-4xl text-ink-900">This page doesn&apos;t exist</h1>
         <Link to="/" className={buttonClasses("primary", "md", "mt-8")}>
           Back to home
         </Link>

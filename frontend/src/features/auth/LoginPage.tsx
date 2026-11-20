@@ -67,7 +67,7 @@ export default function LoginPage() {
         className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl shadow-brand-900/5 ring-1 ring-ink-100 motion-on:animate-fade-up"
       >
         <ToothMark className="size-11" />
-        <h1 className="mt-6 text-2xl font-extrabold tracking-tight text-ink-900">Welcome back</h1>
+        <h1 className="mt-6 font-display text-4xl text-ink-900">Welcome back</h1>
         <p className="mt-1 text-ink-500">
           Patients sign in with their email. Staff use their username.
         </p>

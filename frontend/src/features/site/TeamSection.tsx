@@ -1,5 +1,7 @@
-import { Reveal, RevealGroup, RevealItem } from "../../components/Reveal";
+import { RevealGroup, RevealItem } from "../../components/Reveal";
 import { useDentists } from "./queries";
+import { SectionHeader } from "./SectionHeader";
+import { OFFSCREEN_SECTION } from "./offscreen";
 
 const AVATAR_TONES = [
   "bg-brand-200 text-brand-900",
@@ -13,17 +15,20 @@ export function TeamSection() {
   if (!dentists?.length) return null;
 
   return (
-    <section className="bg-mint-50 py-24">
+    <section className={`${OFFSCREEN_SECTION} bg-mint-50 py-24 lg:py-32`}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <Reveal className="max-w-2xl">
-          <p className="font-semibold text-brand-600">Our team</p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-ink-900 sm:text-4xl">
-            Specialists who take the time to explain
-          </h2>
-        </Reveal>
-        <RevealGroup className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <SectionHeader
+          number="05"
+          label="Our team"
+          title={
+            <>
+              Specialists who <em className="text-brand-600">take the time</em> to explain
+            </>
+          }
+        />
+        <RevealGroup className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {dentists.map((dentist, index) => (
-            <RevealItem key={dentist.id}>
+            <RevealItem key={dentist.id} index={index}>
               <article className="h-full rounded-3xl bg-white p-6 text-center shadow-sm ring-1 ring-ink-100">
                 <span
                   aria-hidden="true"
@@ -34,7 +39,7 @@ export function TeamSection() {
                   {dentist.first_name[0]}
                   {dentist.last_name[0]}
                 </span>
-                <h3 className="mt-4 font-bold text-ink-900">Dr. {dentist.full_name}</h3>
+                <h3 className="mt-4 font-display text-xl text-ink-900">Dr. {dentist.full_name}</h3>
                 <p className="mt-1 text-sm text-ink-500">
                   {dentist.specialty || "General dentistry"}
                 </p>

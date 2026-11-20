@@ -1,6 +1,8 @@
-import { Reveal, RevealGroup, RevealItem } from "../../components/Reveal";
+import { RevealGroup, RevealItem } from "../../components/Reveal";
 import { useCountUp } from "../../hooks/useCountUp";
 import { formatNumber } from "../../lib/format";
+import { SectionHeader } from "./SectionHeader";
+import { OFFSCREEN_SECTION } from "./offscreen";
 
 type Stat = { value: number; suffix: string; label: string; decimals: 0 | 1 };
 
@@ -19,7 +21,7 @@ function Counter({ value, suffix, label, decimals }: Stat) {
     <div>
       <p
         ref={ref}
-        className="text-4xl font-extrabold tracking-tight text-white tabular-nums sm:text-5xl"
+        className="font-display text-[clamp(2rem,9vw,3rem)] text-white tabular-nums sm:text-6xl"
       >
         {/* Screen readers get the final value, not every animation frame. */}
         <span aria-hidden="true">
@@ -27,27 +29,28 @@ function Counter({ value, suffix, label, decimals }: Stat) {
           {suffix}
         </span>
         <span className="sr-only">
-          {value.toLocaleString("en-US")}
+          {formatNumber(value, decimals)}
           {suffix}
         </span>
       </p>
-      <p className="mt-2 text-brand-200">{label}</p>
+      <p className="mt-3 border-t border-white/15 pt-3 text-brand-100">{label}</p>
     </div>
   );
 }
 
 export function StatsSection() {
   return (
-    <section className="bg-brand-900 py-20">
+    <section className={`${OFFSCREEN_SECTION} bg-brand-900 py-24 lg:py-32`}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <Reveal>
-          <h2 className="max-w-xl text-2xl font-bold text-white sm:text-3xl">
-            A neighborhood clinic that runs like clockwork
-          </h2>
-        </Reveal>
-        <RevealGroup className="mt-12 grid grid-cols-2 gap-10 lg:grid-cols-4">
-          {STATS.map((stat) => (
-            <RevealItem key={stat.label}>
+        <SectionHeader
+          number="04"
+          label="In numbers"
+          tone="dark"
+          title="A neighborhood clinic that runs like clockwork"
+        />
+        <RevealGroup className="mt-14 grid grid-cols-2 gap-x-8 gap-y-12 sm:gap-x-12 lg:ml-[25%] lg:gap-x-16">
+          {STATS.map((stat, index) => (
+            <RevealItem key={stat.label} index={index}>
               <Counter {...stat} />
             </RevealItem>
           ))}

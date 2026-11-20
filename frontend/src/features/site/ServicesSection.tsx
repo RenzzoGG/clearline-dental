@@ -1,55 +1,63 @@
 import { Link } from "react-router";
 
 import { Reveal, RevealGroup, RevealItem } from "../../components/Reveal";
-import { Icon, type IconName } from "../../components/ui/Icon";
+import { Icon } from "../../components/ui/Icon";
 import { formatDuration, formatPrice } from "../../lib/format";
 import { useServices } from "./queries";
+import { SectionHeader } from "./SectionHeader";
+import { OFFSCREEN_SECTION } from "./offscreen";
 
-const ICONS: IconName[] = ["sparkle", "shield", "heart", "check", "user", "clock"];
-
+/** 01 — Services as an editorial numbered list (number · name · duration and price). */
 export function ServicesSection() {
   const { data: services, isPending, isError } = useServices();
 
   return (
-    <section id="services" className="scroll-mt-20 bg-white py-24">
+    <section id="services" className={`${OFFSCREEN_SECTION} scroll-mt-20 bg-white py-24 lg:py-32`}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <Reveal className="max-w-2xl">
-          <p className="font-semibold text-brand-600">Services</p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-ink-900 sm:text-4xl">
-            Everything your smile needs, with prices up front
-          </h2>
-          <p className="mt-4 text-lg text-ink-600">
-            No surprises: every visit shows its duration and price before you book.
-          </p>
-        </Reveal>
+        <SectionHeader
+          number="01"
+          label="Services"
+          title={
+            <>
+              Everything your smile needs, <em className="text-brand-600">priced up front</em>
+            </>
+          }
+          intro="No surprises: every visit shows its duration and price before you book."
+        />
 
         {isError ? (
           <p className="mt-12 text-ink-500">Our services list is unavailable right now.</p>
         ) : isPending ? (
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+          <div className="mt-14 divide-y divide-ink-100 border-y border-ink-100" aria-busy="true">
             {Array.from({ length: 6 }, (_, i) => (
-              <div
-                key={i}
-                className="h-44 animate-pulse rounded-3xl bg-ink-50 motion-off:animate-none"
-              />
+              <div key={i} className="h-24 animate-pulse bg-ink-50/60 motion-off:animate-none" />
             ))}
           </div>
         ) : (
-          <RevealGroup className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <RevealGroup className="mt-14 border-t border-ink-200 lg:ml-[25%]">
             {services.map((service, index) => (
-              <RevealItem key={service.id}>
-                <article className="group h-full rounded-3xl bg-ink-50 p-6 ring-1 ring-ink-100 transition-colors hover:bg-mint-50 hover:ring-brand-200">
-                  <span className="grid size-11 place-items-center rounded-2xl bg-white text-brand-700 shadow-sm transition-transform duration-300 group-hover:scale-110 motion-off:transition-none">
-                    <Icon name={ICONS[index % ICONS.length] ?? "sparkle"} />
+              <RevealItem key={service.id} index={index}>
+                <article
+                  data-service-row
+                  className="group grid grid-cols-[3rem_1fr] gap-x-4 gap-y-1 border-b border-ink-200 py-6 transition-colors hover:bg-mint-50/60 sm:grid-cols-[4rem_1fr_auto] sm:items-baseline sm:gap-x-6 sm:px-3"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="row-span-2 font-display text-3xl leading-none text-brand-600 sm:row-span-1"
+                  >
+                    {String(index + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="mt-5 text-lg font-bold text-ink-900">{service.name}</h3>
-                  <p className="mt-1.5 text-sm text-ink-600">{service.description}</p>
-                  <p className="mt-4 flex items-center gap-3 text-sm font-semibold text-ink-700">
-                    <span className="inline-flex items-center gap-1">
-                      <Icon name="clock" className="size-4 text-ink-400" />
-                      {formatDuration(service.duration_minutes)}
+                  <div>
+                    <h3 className="font-display text-2xl leading-tight text-ink-900">
+                      {service.name}
+                    </h3>
+                    <p className="mt-1 text-ink-600">{service.description}</p>
+                  </div>
+                  <p className="flex items-baseline gap-3 text-sm font-semibold text-ink-700 sm:flex-col sm:items-end sm:gap-1 sm:text-right">
+                    <span className="font-display text-xl font-normal text-brand-700">
+                      {formatPrice(service.price)}
                     </span>
-                    <span className="text-brand-700">{formatPrice(service.price)}</span>
+                    <span className="text-ink-500">{formatDuration(service.duration_minutes)}</span>
                   </p>
                 </article>
               </RevealItem>
@@ -57,7 +65,7 @@ export function ServicesSection() {
           </RevealGroup>
         )}
 
-        <Reveal className="mt-10">
+        <Reveal className="mt-10 lg:ml-[25%]">
           <Link
             to="/book"
             className="inline-flex items-center gap-1.5 font-semibold text-brand-700 hover:underline"

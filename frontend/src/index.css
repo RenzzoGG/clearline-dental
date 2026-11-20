@@ -7,25 +7,15 @@
 @custom-variant motion-off (&:where([data-motion="off"], [data-motion="off"] *));
 
 @theme {
-  /* Infinite decorative motion lives in CSS so it runs on the compositor (see Hero). */
-  --animate-drift: drift 14s ease-in-out infinite;
-  --animate-drift-up: drift-up 12s ease-in-out infinite;
-  --animate-float: float 5s ease-in-out 1.6s infinite;
+  /* Editorial display serif for H1/H2 and big numerals (static 400 + italic, ~39 KB). */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
+
   /* One-time entrances; `both` keeps them hidden during their per-element delay. */
   --animate-fade-up: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-rise-in: rise-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-page-in: page-in 0.25s ease-out both;
 
-  @keyframes drift {
-    50% {
-      transform: translate(-12px, 24px);
-    }
-  }
-  @keyframes drift-up {
-    50% {
-      transform: translateY(-20px);
-    }
-  }
   @keyframes fade-up {
     from {
       opacity: var(--fade-opacity, 0);
@@ -42,11 +32,6 @@
     from {
       opacity: 0;
       transform: translateY(32px) scale(0.97);
-    }
-  }
-  @keyframes float {
-    50% {
-      transform: translateY(-6px);
     }
   }
 
@@ -101,4 +86,23 @@
   :focus-visible {
     outline-color: var(--color-brand-500);
   }
+}
+
+/* Scroll reveals (components/Reveal.tsx): hidden-until-in-view only when motion is on.
+   Opacity + transform only; with motion off the content is just there. */
+[data-motion="on"] .reveal,
+[data-motion="on"] .reveal-group > .reveal-item {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.6s var(--ease-soft),
+    transform 0.6s var(--ease-soft);
+}
+[data-motion="on"] .reveal-group > .reveal-item {
+  transition-delay: calc(var(--reveal-index, 0) * 80ms);
+}
+[data-motion="on"] .reveal[data-revealed],
+[data-motion="on"] .reveal-group[data-revealed] > .reveal-item {
+  opacity: 1;
+  transform: none;
 }

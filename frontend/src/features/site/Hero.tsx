@@ -4,7 +4,14 @@ import { Link } from "react-router";
 import { buttonClasses } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
 
-const HEADLINE = ["Gentle", "dental", "care,", "booked", "in", "a", "minute."];
+const HEADLINE = "Gentle dental care, booked in a minute.";
+/**
+ * The headline is split into explicit lines (one set per breakpoint): a fixed line count and
+ * line-height mean the font swap (fallback serif -> Fraunces) can't reflow it (no layout
+ * shift), and it gives the line-by-line reveal its lines. "minute." is the italic accent.
+ */
+const LINES_MOBILE = ["Gentle dental", "care, booked", "in a minute."];
+const LINES_WIDE = ["Gentle dental care,", "booked in a", "minute."];
 /**
  * Hero entrance as CSS keyframes (see `fade-up` in index.css): ~17 elements animate at
  * once on load, and CSS runs them on the compositor instead of a JS frame loop. With
@@ -33,19 +40,20 @@ function fadeUp(
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-mint-50">
-      {/* Decorative blobs: infinite transform-only drift as CSS keyframes (runs on the
-          compositor, no main-thread work per frame); off with prefers-reduced-motion. */}
+      {/* Decorative blobs, static on purpose: endless ambient loops recalculate style every
+          frame wherever there is no GPU compositing (headless Chrome, low-end phones), and a
+          calm brand doesn't need motion that never stops. */}
       <div
         aria-hidden="true"
-        className="absolute -top-32 -right-24 size-[28rem] rounded-full bg-brand-200/50 blur-3xl motion-on:animate-drift"
+        className="absolute -top-32 -right-24 size-[28rem] rounded-full bg-brand-200/50 blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="absolute -bottom-40 -left-24 size-[24rem] rounded-full bg-coral-100/70 blur-3xl motion-on:animate-drift-up"
+        className="absolute -bottom-40 -left-24 size-[24rem] rounded-full bg-coral-100/70 blur-3xl"
       />
 
-      <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pt-16 pb-24 sm:px-6 md:pt-24 lg:grid-cols-[1.15fr_1fr]">
-        <div>
+      <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pt-14 pb-24 sm:px-6 md:pt-20 lg:grid-cols-12 lg:gap-x-8">
+        <div className="lg:col-span-7">
           <p
             style={fadeUp(0, { duration: 0.5, slideOnly: true })}
             className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-100 motion-on:animate-fade-up"
@@ -53,21 +61,15 @@ export function Hero() {
             <Icon name="sparkle" className="size-4" /> Now booking same-week visits in Hermosillo
           </p>
 
-          <h1 className="mt-6 text-4xl leading-[1.05] font-extrabold tracking-tight text-ink-900 sm:text-6xl">
-            {HEADLINE.map((word, index) => (
-              <span
-                key={index}
-                className="mr-[0.25em] inline-block motion-on:animate-fade-up"
-                style={fadeUp(0.1 + index * 0.06, { from: "0.4em", slideOnly: true })}
-              >
-                {word === "minute." ? <span className="text-brand-600">{word}</span> : word}
-              </span>
-            ))}
+          <h1 className="mt-6 font-display text-[clamp(2.6rem,11.5vw,3.5rem)] leading-[1.04] tracking-[-0.02em] text-ink-900 sm:text-[4rem] lg:text-[4rem] xl:text-[4.5rem]">
+            <span className="sr-only">{HEADLINE}</span>
+            <HeadlineLines lines={LINES_MOBILE} className="sm:hidden" />
+            <HeadlineLines lines={LINES_WIDE} className="hidden sm:block" />
           </h1>
 
           <p
             style={fadeUp(0.55, { slideOnly: true })}
-            className="mt-6 max-w-xl text-lg text-ink-600 motion-on:animate-fade-up"
+            className="mt-8 max-w-xl text-lg text-ink-600 motion-on:animate-fade-up"
           >
             Checkups, whitening, orthodontics and more — with clear prices, real-time availability
             and a team that actually explains what&apos;s going on.
@@ -89,6 +91,29 @@ export function Hero() {
   );
 }
 
+function HeadlineLines({ lines, className }: { lines: readonly string[]; className: string }) {
+  return (
+    <span aria-hidden="true" className={className}>
+      {lines.map((line, index) => (
+        <span
+          key={line}
+          className="block whitespace-nowrap motion-on:animate-fade-up"
+          style={fadeUp(0.1 + index * 0.08, { from: "0.4em", slideOnly: true })}
+        >
+          {line.endsWith("minute.") ? (
+            <>
+              {line.slice(0, -"minute.".length)}
+              <em className="text-brand-600">minute.</em>
+            </>
+          ) : (
+            line
+          )}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 /** Illustrative card that mimics the booking flow (pure markup, no images). */
 function BookingPreview() {
   const slots = ["9:00 AM", "9:15 AM", "10:30 AM", "11:45 AM", "2:00 PM", "4:15 PM"];
@@ -96,7 +121,7 @@ function BookingPreview() {
     <div
       aria-hidden="true"
       style={{ animationDelay: "0.35s" }}
-      className="relative mx-auto w-full max-w-md motion-on:animate-rise-in"
+      className="relative mx-auto w-full max-w-md motion-on:animate-rise-in lg:col-span-5"
     >
       <div className="rounded-3xl bg-white p-6 shadow-2xl shadow-brand-900/10 ring-1 ring-ink-100">
         <div className="flex items-center justify-between">
@@ -123,13 +148,12 @@ function BookingPreview() {
         </div>
       </div>
 
-      {/* Outer: one-time entrance. Inner: endless float. Separate elements so the two
-          animations don't fight over `transform`. */}
+      {/* One-time entrance only (no endless float). */}
       <div
         style={fadeUp(1.1, { from: "16px", duration: 0.5 })}
         className="absolute -bottom-7 -left-2 motion-on:animate-fade-up sm:-left-10"
       >
-        <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-xl ring-1 ring-ink-100 motion-on:animate-float">
+        <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-xl ring-1 ring-ink-100">
           <span className="grid size-9 place-items-center rounded-full bg-emerald-100 text-emerald-700">
             <Icon name="check" className="size-5" />
           </span>

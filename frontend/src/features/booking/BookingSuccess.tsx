@@ -44,7 +44,7 @@ export function BookingSuccess({
           transition={{ duration: 0.35, delay: 0.45, ease: "easeOut" }}
         />
       </svg>
-      <h2 className="mt-6 text-2xl font-extrabold text-ink-900">You&apos;re booked!</h2>
+      <h2 className="mt-6 font-display text-3xl text-ink-900">You&apos;re booked!</h2>
       <p className="mt-2 text-ink-600">
         {appointment.service_name} with Dr. {appointment.dentist_name}
         <br />

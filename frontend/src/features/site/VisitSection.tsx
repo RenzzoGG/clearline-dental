@@ -3,13 +3,26 @@ import { Link } from "react-router";
 import { Reveal } from "../../components/Reveal";
 import { buttonClasses } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
+import { SectionHeader } from "./SectionHeader";
+import { OFFSCREEN_SECTION } from "./offscreen";
 
 export function VisitSection() {
   return (
-    <section className="bg-white py-24">
-      <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_1.4fr]">
+    <section className={`${OFFSCREEN_SECTION} bg-white py-24 lg:py-32`}>
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <SectionHeader
+          number="06"
+          label="Visit us"
+          title={
+            <>
+              Come say hello in <em className="text-brand-600">Hermosillo</em>
+            </>
+          }
+        />
+      </div>
+      <div className="mx-auto mt-14 grid max-w-6xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_1.4fr]">
         <Reveal className="rounded-3xl bg-ink-50 p-8 ring-1 ring-ink-100">
-          <h2 className="text-2xl font-extrabold tracking-tight text-ink-900">Visit us</h2>
+          <h3 className="font-display text-2xl text-ink-900">Clinic details</h3>
           {/* Valid <dl>: each <div> groups exactly one <dt> + <dd>; the icon lives in the <dt>. */}
           <dl className="mt-6 space-y-5 text-ink-700">
             <div>
@@ -44,9 +57,9 @@ export function VisitSection() {
             aria-hidden="true"
             className="absolute -top-16 -right-16 size-64 rounded-full bg-white/10"
           />
-          <h2 className="relative text-3xl font-extrabold tracking-tight sm:text-4xl">
-            Your next checkup is a few taps away.
-          </h2>
+          <h3 className="relative font-display text-4xl leading-tight sm:text-5xl">
+            Your next checkup is <em>a few taps</em> away.
+          </h3>
           <p className="relative mt-4 max-w-md text-coral-50">
             Pick a service, a dentist and a time that works for you. We&apos;ll confirm it right
             away.
