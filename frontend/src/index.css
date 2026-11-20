@@ -162,3 +162,66 @@
     transform: scaleY(0);
   }
 }
+
+/* Pinned "How it works" (HowItWorksSection). Only displayed on lg+ with motion on; the
+   driver in motion/Enhancements writes --pin-progress (0..1) and data-active-step. */
+.pin-track {
+  --pin-progress: 0;
+  height: 280vh;
+}
+.pin-fill {
+  transform: scaleY(var(--pin-progress));
+}
+.pin-step {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.5s var(--ease-soft),
+    transform 0.5s var(--ease-soft);
+}
+.pin-dot,
+.pin-label {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+[data-active-step="0"] .pin-step:nth-child(1) {
+  opacity: 1;
+  transform: none;
+}
+[data-active-step="0"] .pin-node:nth-of-type(-n + 1) .pin-dot {
+  background-color: var(--color-brand-600);
+}
+[data-active-step="0"] .pin-node:nth-of-type(1) .pin-label {
+  color: var(--color-ink-900);
+}
+[data-active-step="1"] .pin-step:nth-child(2) {
+  opacity: 1;
+  transform: none;
+}
+[data-active-step="1"] .pin-node:nth-of-type(-n + 2) .pin-dot {
+  background-color: var(--color-brand-600);
+}
+[data-active-step="1"] .pin-node:nth-of-type(2) .pin-label {
+  color: var(--color-ink-900);
+}
+[data-active-step="2"] .pin-step:nth-child(3) {
+  opacity: 1;
+  transform: none;
+}
+[data-active-step="2"] .pin-node:nth-of-type(-n + 3) .pin-dot {
+  background-color: var(--color-brand-600);
+}
+[data-active-step="2"] .pin-node:nth-of-type(3) .pin-label {
+  color: var(--color-ink-900);
+}
+[data-active-step="3"] .pin-step:nth-child(4) {
+  opacity: 1;
+  transform: none;
+}
+[data-active-step="3"] .pin-node:nth-of-type(-n + 4) .pin-dot {
+  background-color: var(--color-brand-600);
+}
+[data-active-step="3"] .pin-node:nth-of-type(4) .pin-label {
+  color: var(--color-ink-900);
+}

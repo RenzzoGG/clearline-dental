@@ -16,7 +16,7 @@ export default function Enhancements() {
 
   useEffect(() => {
     if (!enabled) return;
-    const cleanups = [attachMagnetic()];
+    const cleanups = [attachMagnetic(), attachPin()];
     return () => cleanups.forEach((cleanup) => cleanup());
   }, [enabled]);
 
@@ -61,4 +61,42 @@ function attachMagnetic(): () => void {
     };
   });
   return () => detach.forEach((cleanup) => cleanup());
+}
+
+const HEADER = 72; // px, the sticky site header (the pinned panel sits below it)
+
+/**
+ * Pinned "How it works": maps the scroll position inside `[data-pin]` (a tall track whose
+ * panel is `position: sticky`) to `--pin-progress` (0..1) and `data-active-step` (0..3).
+ * One passive scroll listener, at most one rAF per frame, and no React renders. The track
+ * is display:none below lg (CSS), in which case there is nothing to do.
+ */
+function attachPin(): () => void {
+  const track = document.querySelector<HTMLElement>("[data-pin]");
+  if (!track) return () => {};
+  const steps = track.querySelectorAll(".pin-step").length || 1;
+  let frame = 0;
+  const update = () => {
+    frame = 0;
+    if (!track.offsetHeight) return;
+    const box = track.getBoundingClientRect();
+    const travel = box.height - (window.innerHeight - HEADER);
+    const progress = Math.min(1, Math.max(0, (HEADER - box.top) / travel));
+    track.style.setProperty("--pin-progress", progress.toFixed(4));
+    const active = String(Math.min(steps - 1, Math.floor(progress * steps)));
+    if (track.dataset.activeStep !== active) track.dataset.activeStep = active;
+  };
+  const schedule = () => {
+    if (!frame) frame = requestAnimationFrame(update);
+  };
+  window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("resize", schedule);
+  update();
+  return () => {
+    cancelAnimationFrame(frame);
+    window.removeEventListener("scroll", schedule);
+    window.removeEventListener("resize", schedule);
+    track.style.removeProperty("--pin-progress");
+    track.dataset.activeStep = "0";
+  };
 }
