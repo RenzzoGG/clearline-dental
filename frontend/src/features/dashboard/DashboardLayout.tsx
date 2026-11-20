@@ -18,16 +18,19 @@ export default function DashboardLayout() {
   return (
     <div className="min-h-dvh bg-ink-50">
       <header className="sticky top-0 z-30 border-b border-ink-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-6 sm:px-6">
           <Link to="/dashboard" aria-label="Clearline Dental dashboard">
-            <Logo />
+            <Logo compact />
           </Link>
           <nav aria-label="Dashboard" className="flex gap-1">
             <NavLink to="/dashboard" end className={navClass}>
-              <Icon name="calendar" className="size-4" /> Schedule
+              <Icon name="calendar" className="size-4" />
+              {/* Icon-only on phones; the label stays available to screen readers. */}
+              <span className="sr-only sm:not-sr-only">Schedule</span>
             </NavLink>
             <NavLink to="/dashboard/insights" className={navClass}>
-              <Icon name="chart" className="size-4" /> Insights
+              <Icon name="chart" className="size-4" />
+              <span className="sr-only sm:not-sr-only">Insights</span>
             </NavLink>
           </nav>
           <div className="ml-auto flex items-center gap-3">
@@ -46,7 +49,7 @@ export default function DashboardLayout() {
                 navigate("/login", { replace: true });
               }}
             >
-              Sign out
+              <span className="sr-only sm:not-sr-only">Sign out</span>
             </Button>
           </div>
         </div>

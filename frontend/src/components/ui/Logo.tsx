@@ -10,12 +10,19 @@ export function ToothMark({ className = "size-8" }: { className?: string }) {
   );
 }
 
-export function Logo({ inverted = false }: { inverted?: boolean }) {
+/** compact: show only the tooth mark below the sm breakpoint (tight headers). */
+export function Logo({
+  inverted = false,
+  compact = false,
+}: {
+  inverted?: boolean;
+  compact?: boolean;
+}) {
   return (
     <span className="inline-flex items-center gap-2.5">
       <ToothMark />
       <span
-        className={`text-lg font-extrabold tracking-tight ${inverted ? "text-white" : "text-ink-900"}`}
+        className={`text-lg font-extrabold tracking-tight whitespace-nowrap ${inverted ? "text-white" : "text-ink-900"} ${compact ? "hidden sm:inline" : ""}`}
       >
         Clearline<span className={inverted ? "text-mint-300" : "text-brand-600"}> Dental</span>
       </span>
