@@ -1,25 +1,47 @@
-import { animate, useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+
+import { useMotionPreference } from "../app/motion-preference";
+
+/** Fast start, gentle landing (same feel as the site's cubic-bezier(0.16, 1, 0.3, 1)). */
+const easeOutQuart = (t: number) => 1 - (1 - t) ** 4;
 
 /**
  * Counts from 0 to `target` the first time the element scrolls into view.
- * With prefers-reduced-motion the final value is shown immediately.
+ * With motion off (toggle or prefers-reduced-motion) the final value is shown immediately.
+ *
+ * Plain IntersectionObserver + requestAnimationFrame on purpose: importing Motion's
+ * `animate`/`useInView` here pulled its whole animation engine into the critical bundle.
  */
 export function useCountUp<T extends Element>(target: number, duration = 1.6) {
   const ref = useRef<T>(null);
-  const inView = useInView(ref, { once: true, margin: "-15% 0px" });
-  const reduceMotion = useReducedMotion();
+  const { enabled } = useMotionPreference();
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    if (!inView || reduceMotion) return;
-    const controls = animate(0, target, {
-      duration,
-      ease: [0.16, 1, 0.3, 1],
-      onUpdate: (latest) => setValue(latest),
-    });
-    return () => controls.stop();
-  }, [inView, reduceMotion, target, duration]);
+    const element = ref.current;
+    if (!enabled || !element || typeof IntersectionObserver === "undefined") return;
 
-  return { ref, value: reduceMotion ? target : value };
+    let frame = 0;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        observer.disconnect();
+        const start = performance.now();
+        const tick = (now: number) => {
+          const progress = Math.min((now - start) / (duration * 1000), 1);
+          setValue(target * easeOutQuart(progress));
+          if (progress < 1) frame = requestAnimationFrame(tick);
+        };
+        frame = requestAnimationFrame(tick);
+      },
+      { rootMargin: "0px 0px -15% 0px" },
+    );
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [enabled, target, duration]);
+
+  return { ref, value: enabled ? value : target };
 }

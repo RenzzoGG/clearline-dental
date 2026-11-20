@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, m } from "motion/react";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useReducer, useRef, useState } from "react";
 
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
+import { Spinner } from "../../components/ui/Spinner";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { api, ApiError } from "../../lib/api";
 import { formatDateKey, formatTime, toDateKey } from "../../lib/time";
@@ -26,9 +27,15 @@ import {
 import { BookingSuccess } from "./BookingSuccess";
 import { ConfirmStep } from "./steps/ConfirmStep";
 import { DentistStep } from "./steps/DentistStep";
-import { DetailsStep } from "./steps/DetailsStep";
 import { ServiceStep } from "./steps/ServiceStep";
 import { TimeStep } from "./steps/TimeStep";
+
+// Step 4 carries the forms (react-hook-form + zod). Loading it lazily keeps them out of the
+// JS needed to paint /book; it is prefetched as soon as the visitor reaches the time step.
+const loadDetailsStep = () => import("./steps/DetailsStep");
+const DetailsStep = lazy(() =>
+  loadDetailsStep().then((module) => ({ default: module.DetailsStep })),
+);
 
 const STEP_INTROS: Record<Step, string> = {
   service: "What would you like to come in for?",
@@ -56,6 +63,11 @@ export default function BookingPage() {
   const done = completedSteps(state, context);
   const service = services?.find((s) => s.id === state.serviceId);
   const dentist = dentists?.find((d) => d.id === state.dentistId);
+
+  // Prefetch the forms one step early so step 4 opens without a spinner.
+  useEffect(() => {
+    if (state.step === "time") void loadDetailsStep();
+  }, [state.step]);
 
   // Move focus to the step heading so keyboard/screen reader users know where they are.
   useEffect(() => {
@@ -203,11 +215,13 @@ export default function BookingPage() {
                     />
                   )}
                   {state.step === "details" && (
-                    <DetailsStep
-                      onReady={(me) =>
-                        dispatch({ type: "next", context: { hasPatient: isBookablePatient(me) } })
-                      }
-                    />
+                    <Suspense fallback={<Spinner label="Loading…" />}>
+                      <DetailsStep
+                        onReady={(me) =>
+                          dispatch({ type: "next", context: { hasPatient: isBookablePatient(me) } })
+                        }
+                      />
+                    </Suspense>
                   )}
                   {state.step === "confirm" && service && dentist && state.slot && user && (
                     <>

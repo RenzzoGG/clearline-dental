@@ -30,7 +30,7 @@ export function ServicesSection() {
             {Array.from({ length: 6 }, (_, i) => (
               <div
                 key={i}
-                className="h-44 animate-pulse rounded-3xl bg-ink-50 motion-reduce:animate-none"
+                className="h-44 animate-pulse rounded-3xl bg-ink-50 motion-off:animate-none"
               />
             ))}
           </div>
@@ -39,7 +39,7 @@ export function ServicesSection() {
             {services.map((service, index) => (
               <RevealItem key={service.id}>
                 <article className="group h-full rounded-3xl bg-ink-50 p-6 ring-1 ring-ink-100 transition-colors hover:bg-mint-50 hover:ring-brand-200">
-                  <span className="grid size-11 place-items-center rounded-2xl bg-white text-brand-700 shadow-sm transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none">
+                  <span className="grid size-11 place-items-center rounded-2xl bg-white text-brand-700 shadow-sm transition-transform duration-300 group-hover:scale-110 motion-off:transition-none">
                     <Icon name={ICONS[index % ICONS.length] ?? "sparkle"} />
                   </span>
                   <h3 className="mt-5 text-lg font-bold text-ink-900">{service.name}</h3>

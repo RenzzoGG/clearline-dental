@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { m } from "motion/react";
+import type { CSSProperties } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router";
-import { z } from "zod";
+import { z } from "zod/mini";
 
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
@@ -14,9 +14,11 @@ import { ApiError } from "../../lib/api";
 import { isStaff } from "../../lib/types";
 import { useAuth } from "./auth-context";
 
+// zod/mini: same validation as classic Zod, but as tree-shakable functions (.check(...))
+// instead of methods, which keeps the form chunk on /book and /login much smaller.
 const schema = z.object({
-  username: z.string().trim().min(1, "Enter your email or username"),
-  password: z.string().min(1, "Enter your password"),
+  username: z.string().check(z.trim(), z.minLength(1, "Enter your email or username")),
+  password: z.string().check(z.minLength(1, "Enter your password")),
 });
 type LoginForm = z.infer<typeof schema>;
 
@@ -56,11 +58,13 @@ export default function LoginPage() {
 
   return (
     <section className="grid min-h-[calc(100dvh-4.5rem)] place-items-center bg-mint-50 px-4 py-16">
-      <m.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl shadow-brand-900/5 ring-1 ring-ink-100"
+      {/* CSS entrance that only slides (no fade): the card holds the LCP heading, and
+          opacity 0 would delay LCP. No Motion on this route keeps its JS small. */}
+      <div
+        style={
+          { "--fade-from": "16px", "--fade-opacity": 1, animationDuration: "0.4s" } as CSSProperties
+        }
+        className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl shadow-brand-900/5 ring-1 ring-ink-100 motion-on:animate-fade-up"
       >
         <ToothMark className="size-11" />
         <h1 className="mt-6 text-2xl font-extrabold tracking-tight text-ink-900">Welcome back</h1>
@@ -94,7 +98,7 @@ export default function LoginPage() {
             Book a visit and create your account
           </Link>
         </p>
-      </m.div>
+      </div>
     </section>
   );
 }

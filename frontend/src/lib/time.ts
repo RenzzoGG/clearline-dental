@@ -7,28 +7,33 @@ import { CLINIC_TIME_ZONE } from "./config";
  * "Date keys" are plain YYYY-MM-DD strings in clinic local time.
  */
 
-const timeFormatter = new Intl.DateTimeFormat("en-US", {
-  timeZone: CLINIC_TIME_ZONE,
-  hour: "numeric",
-  minute: "2-digit",
-});
+/**
+ * Formatters are created on first use, not at import time: building the first Intl formatter
+ * with a time zone loads ICU time-zone data, a noticeable main-thread cost that would land on
+ * every page importing this module (e.g. /book before the visitor reaches the time step).
+ */
+function lazyFormatter(locale: string, options: Intl.DateTimeFormatOptions) {
+  let formatter: Intl.DateTimeFormat | undefined;
+  return () =>
+    (formatter ??= new Intl.DateTimeFormat(locale, { timeZone: CLINIC_TIME_ZONE, ...options }));
+}
 
-const dateKeyFormatter = new Intl.DateTimeFormat("en-CA", {
-  timeZone: CLINIC_TIME_ZONE,
+const timeFormatter = lazyFormatter("en-US", { hour: "numeric", minute: "2-digit" });
+
+const dateKeyFormatter = lazyFormatter("en-CA", {
   year: "numeric",
   month: "2-digit",
   day: "2-digit",
 });
 
-const hourMinuteFormatter = new Intl.DateTimeFormat("en-GB", {
-  timeZone: CLINIC_TIME_ZONE,
+const hourMinuteFormatter = lazyFormatter("en-GB", {
   hour: "2-digit",
   minute: "2-digit",
   hourCycle: "h23",
 });
 
 /** "9:00 AM" in clinic time. */
-export const formatTime = (iso: string): string => timeFormatter.format(new Date(iso));
+export const formatTime = (iso: string): string => timeFormatter().format(new Date(iso));
 
 /** "9:00 AM – 9:30 AM" in clinic time. */
 export const formatTimeRange = (startIso: string, endIso: string): string =>
@@ -36,14 +41,14 @@ export const formatTimeRange = (startIso: string, endIso: string): string =>
 
 /** Clinic-local calendar date of an instant, as YYYY-MM-DD. */
 export const toDateKey = (iso: string | Date): string =>
-  dateKeyFormatter.format(typeof iso === "string" ? new Date(iso) : iso);
+  dateKeyFormatter().format(typeof iso === "string" ? new Date(iso) : iso);
 
 /** Today's date in the clinic, as YYYY-MM-DD. */
 export const todayKey = (now: Date = new Date()): string => toDateKey(now);
 
 /** Minutes since clinic-local midnight (for placing appointments on a time grid). */
 export const minutesOfDay = (iso: string): number => {
-  const [hours = "0", minutes = "0"] = hourMinuteFormatter.format(new Date(iso)).split(":");
+  const [hours = "0", minutes = "0"] = hourMinuteFormatter().format(new Date(iso)).split(":");
   return Number(hours) * 60 + Number(minutes);
 };
 

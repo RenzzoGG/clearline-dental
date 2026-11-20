@@ -1,4 +1,3 @@
-import { useReducedMotion } from "motion/react";
 import { useState, type ReactNode } from "react";
 import {
   Bar,
@@ -11,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { useMotionPreference } from "../../app/motion-preference";
 import { Spinner } from "../../components/ui/Spinner";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { formatPercent } from "../../lib/format";
@@ -29,7 +29,7 @@ const CORAL = "#de5636";
 
 export default function InsightsPage() {
   useDocumentTitle("Insights");
-  const reduceMotion = useReducedMotion() ?? false;
+  const reduceMotion = !useMotionPreference().enabled;
   const [days, setDays] = useState<number>(30);
   const to = todayKey();
   const from = addDays(to, -(days - 1));

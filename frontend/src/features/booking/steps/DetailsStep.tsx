@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm, type FieldValues, type Path, type UseFormSetError } from "react-hook-form";
-import { z } from "zod";
+import { z } from "zod/mini";
 
 import { Alert } from "../../../components/ui/Alert";
 import { Button } from "../../../components/ui/Button";
@@ -11,19 +11,21 @@ import { ApiError } from "../../../lib/api";
 import { isStaff, type Me } from "../../../lib/types";
 import { useAuth } from "../../auth/auth-context";
 
+// zod/mini: same validation as classic Zod, but as tree-shakable functions (.check(...))
+// instead of methods, which keeps the form chunk on /book and /login much smaller.
 const registerSchema = z.object({
-  first_name: z.string().trim().min(1, "Required"),
-  last_name: z.string().trim().min(1, "Required"),
+  first_name: z.string().check(z.trim(), z.minLength(1, "Required")),
+  last_name: z.string().check(z.trim(), z.minLength(1, "Required")),
   email: z.email("Enter a valid email"),
-  phone: z.string().trim().min(7, "Enter a phone number we can reach you at"),
+  phone: z.string().check(z.trim(), z.minLength(7, "Enter a phone number we can reach you at")),
   // The server runs Django's password validators; this is only quick feedback.
-  password: z.string().min(8, "Use at least 8 characters"),
+  password: z.string().check(z.minLength(8, "Use at least 8 characters")),
 });
 type RegisterForm = z.infer<typeof registerSchema>;
 
 const loginSchema = z.object({
   username: z.email("Enter the email you registered with"),
-  password: z.string().min(1, "Enter your password"),
+  password: z.string().check(z.minLength(1, "Enter your password")),
 });
 type LoginForm = z.infer<typeof loginSchema>;
 

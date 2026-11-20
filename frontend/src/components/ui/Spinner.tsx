@@ -2,7 +2,7 @@ export function Spinner({ className = "size-5", label }: { className?: string; l
   return (
     <span role={label ? "status" : undefined} className="inline-flex items-center gap-2">
       <svg
-        className={`animate-spin motion-reduce:animate-none ${className}`}
+        className={`animate-spin motion-off:animate-none ${className}`}
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden="true"

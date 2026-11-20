@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { createBrowserRouter, Link } from "react-router";
+import { Link, Route, Routes } from "react-router";
 
 import { buttonClasses } from "../components/ui/Button";
 import { Spinner } from "../components/ui/Spinner";
@@ -7,8 +7,8 @@ import { RequireStaff } from "../features/auth/RequireStaff";
 import LandingPage from "../features/site/LandingPage";
 import PublicLayout from "./PublicLayout";
 
-// Route-level code splitting: the landing page ships in the main bundle,
-// everything else (incl. recharts in the dashboard) loads on demand.
+// Route-level code splitting: each page is its own chunk (the landing keeps only its hero in
+// the shell). The route-preload Vite plugin fetches the current page's chunk in parallel.
 const BookingPage = lazy(() => import("../features/booking/BookingPage"));
 const LoginPage = lazy(() => import("../features/auth/LoginPage"));
 const DashboardLayout = lazy(() => import("../features/dashboard/DashboardLayout"));
@@ -43,22 +43,23 @@ function NotFound() {
   );
 }
 
-export const router = createBrowserRouter([
-  {
-    element: <PublicLayout />,
-    children: [
-      { index: true, element: <LandingPage /> },
-      { path: "book", element: page(<BookingPage />) },
-      { path: "login", element: page(<LoginPage />) },
-      { path: "*", element: <NotFound /> },
-    ],
-  },
-  {
-    path: "dashboard",
-    element: <RequireStaff>{page(<DashboardLayout />)}</RequireStaff>,
-    children: [
-      { index: true, element: page(<SchedulePage />) },
-      { path: "insights", element: page(<InsightsPage />) },
-    ],
-  },
-]);
+/**
+ * Declarative routes (<BrowserRouter> + <Routes>) instead of createBrowserRouter: the app
+ * uses no loaders/actions, so the data-router engine was dead weight in the critical bundle.
+ */
+export function AppRoutes() {
+  return (
+    <Routes>
+      <Route element={<PublicLayout />}>
+        <Route index element={<LandingPage />} />
+        <Route path="book" element={page(<BookingPage />)} />
+        <Route path="login" element={page(<LoginPage />)} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+      <Route path="dashboard" element={<RequireStaff>{page(<DashboardLayout />)}</RequireStaff>}>
+        <Route index element={page(<SchedulePage />)} />
+        <Route path="insights" element={page(<InsightsPage />)} />
+      </Route>
+    </Routes>
+  );
+}

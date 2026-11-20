@@ -8,7 +8,8 @@ const HEADLINE = ["Gentle", "dental", "care,", "booked", "in", "a", "minute."];
 /**
  * Hero entrance as CSS keyframes (see `fade-up` in index.css): ~17 elements animate at
  * once on load, and CSS runs them on the compositor instead of a JS frame loop. With
- * prefers-reduced-motion (`motion-safe:`) the content simply appears.
+ * motion off (header toggle or prefers-reduced-motion; `motion-on:` variant) the content
+ * simply appears.
  */
 function fadeUp(
   delay: number,
@@ -36,18 +37,18 @@ export function Hero() {
           compositor, no main-thread work per frame); off with prefers-reduced-motion. */}
       <div
         aria-hidden="true"
-        className="absolute -top-32 -right-24 size-[28rem] rounded-full bg-brand-200/50 blur-3xl motion-safe:animate-drift"
+        className="absolute -top-32 -right-24 size-[28rem] rounded-full bg-brand-200/50 blur-3xl motion-on:animate-drift"
       />
       <div
         aria-hidden="true"
-        className="absolute -bottom-40 -left-24 size-[24rem] rounded-full bg-coral-100/70 blur-3xl motion-safe:animate-drift-up"
+        className="absolute -bottom-40 -left-24 size-[24rem] rounded-full bg-coral-100/70 blur-3xl motion-on:animate-drift-up"
       />
 
       <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pt-16 pb-24 sm:px-6 md:pt-24 lg:grid-cols-[1.15fr_1fr]">
         <div>
           <p
             style={fadeUp(0, { duration: 0.5, slideOnly: true })}
-            className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-100 motion-safe:animate-fade-up"
+            className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-100 motion-on:animate-fade-up"
           >
             <Icon name="sparkle" className="size-4" /> Now booking same-week visits in Hermosillo
           </p>
@@ -56,7 +57,7 @@ export function Hero() {
             {HEADLINE.map((word, index) => (
               <span
                 key={index}
-                className="mr-[0.25em] inline-block motion-safe:animate-fade-up"
+                className="mr-[0.25em] inline-block motion-on:animate-fade-up"
                 style={fadeUp(0.1 + index * 0.06, { from: "0.4em", slideOnly: true })}
               >
                 {word === "minute." ? <span className="text-brand-600">{word}</span> : word}
@@ -66,16 +67,13 @@ export function Hero() {
 
           <p
             style={fadeUp(0.55, { slideOnly: true })}
-            className="mt-6 max-w-xl text-lg text-ink-600 motion-safe:animate-fade-up"
+            className="mt-6 max-w-xl text-lg text-ink-600 motion-on:animate-fade-up"
           >
             Checkups, whitening, orthodontics and more — with clear prices, real-time availability
             and a team that actually explains what&apos;s going on.
           </p>
 
-          <div
-            style={fadeUp(0.7)}
-            className="mt-9 flex flex-wrap gap-3 motion-safe:animate-fade-up"
-          >
+          <div style={fadeUp(0.7)} className="mt-9 flex flex-wrap gap-3 motion-on:animate-fade-up">
             <Link to="/book" className={buttonClasses("accent", "lg")}>
               Book a visit <Icon name="arrowRight" className="size-5" />
             </Link>
@@ -98,7 +96,7 @@ function BookingPreview() {
     <div
       aria-hidden="true"
       style={{ animationDelay: "0.35s" }}
-      className="relative mx-auto w-full max-w-md motion-safe:animate-rise-in"
+      className="relative mx-auto w-full max-w-md motion-on:animate-rise-in"
     >
       <div className="rounded-3xl bg-white p-6 shadow-2xl shadow-brand-900/10 ring-1 ring-ink-100">
         <div className="flex items-center justify-between">
@@ -115,7 +113,7 @@ function BookingPreview() {
             <span
               key={slot}
               style={fadeUp(0.7 + index * 0.06, { from: "8px", duration: 0.4 })}
-              className={`rounded-xl py-2.5 text-center text-sm font-semibold motion-safe:animate-fade-up ${
+              className={`rounded-xl py-2.5 text-center text-sm font-semibold motion-on:animate-fade-up ${
                 index === 2 ? "bg-brand-700 text-white" : "bg-ink-50 text-ink-700"
               }`}
             >
@@ -129,9 +127,9 @@ function BookingPreview() {
           animations don't fight over `transform`. */}
       <div
         style={fadeUp(1.1, { from: "16px", duration: 0.5 })}
-        className="absolute -bottom-7 -left-2 motion-safe:animate-fade-up sm:-left-10"
+        className="absolute -bottom-7 -left-2 motion-on:animate-fade-up sm:-left-10"
       >
-        <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-xl ring-1 ring-ink-100 motion-safe:animate-float">
+        <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-xl ring-1 ring-ink-100 motion-on:animate-float">
           <span className="grid size-9 place-items-center rounded-full bg-emerald-100 text-emerald-700">
             <Icon name="check" className="size-5" />
           </span>

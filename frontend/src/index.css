@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Motion toggle (see app/motion-preference.tsx): <html data-motion="on|off"> is set before
+   the first paint by the inline script in index.html. Use these instead of motion-safe: /
+   motion-reduce:, which only follow the OS setting and would ignore the visitor's toggle. */
+@custom-variant motion-on (&:where([data-motion="on"], [data-motion="on"] *));
+@custom-variant motion-off (&:where([data-motion="off"], [data-motion="off"] *));
+
 @theme {
   /* Infinite decorative motion lives in CSS so it runs on the compositor (see Hero). */
   --animate-drift: drift 14s ease-in-out infinite;
@@ -8,6 +14,7 @@
   /* One-time entrances; `both` keeps them hidden during their per-element delay. */
   --animate-fade-up: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-rise-in: rise-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-page-in: page-in 0.25s ease-out both;
 
   @keyframes drift {
     50% {
@@ -23,6 +30,12 @@
     from {
       opacity: var(--fade-opacity, 0);
       transform: translateY(var(--fade-from, 12px));
+    }
+  }
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
     }
   }
   @keyframes rise-in {

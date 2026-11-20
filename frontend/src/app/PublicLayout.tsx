@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router";
 
 import { buttonClasses } from "../components/ui/Button";
 import { Logo } from "../components/ui/Logo";
+import { MotionToggle } from "../components/ui/MotionToggle";
 import { useAuth } from "../features/auth/auth-context";
 import { isStaff } from "../lib/types";
 import { AnimatedOutlet } from "./AnimatedOutlet";
@@ -11,8 +12,15 @@ export default function PublicLayout() {
   const { user, logout } = useAuth();
   const { pathname, hash } = useLocation();
 
-  // SPA navigation keeps the scroll position; reset it on page changes.
+  // SPA navigation keeps the scroll position; reset it on page changes. Skipped on the first
+  // render: the page already starts at the top, and scrollTo would force a full layout
+  // in the middle of the initial render.
+  const isFirstRender = useRef(true);
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     if (!hash) window.scrollTo({ top: 0 });
   }, [pathname, hash]);
 
@@ -29,45 +37,48 @@ export default function PublicLayout() {
           <Link to="/" aria-label="Clearline Dental home">
             <Logo compact="xs" />
           </Link>
-          <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
-            <a
-              href="/#services"
-              className="hidden rounded-full px-3 py-2 text-sm font-semibold text-ink-600 hover:text-ink-900 sm:inline"
-            >
-              Services
-            </a>
-            {user ? (
-              <>
-                {isStaff(user) && (
-                  <NavLink
-                    to="/dashboard"
+          <div className="flex items-center gap-1 sm:gap-2">
+            <MotionToggle />
+            <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
+              <a
+                href="/#services"
+                className="hidden rounded-full px-3 py-2 text-sm font-semibold text-ink-600 hover:text-ink-900 sm:inline"
+              >
+                Services
+              </a>
+              {user ? (
+                <>
+                  {isStaff(user) && (
+                    <NavLink
+                      to="/dashboard"
+                      className="rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap text-ink-600 hover:text-ink-900"
+                    >
+                      Dashboard
+                    </NavLink>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void logout()}
                     className="rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap text-ink-600 hover:text-ink-900"
                   >
-                    Dashboard
-                  </NavLink>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void logout()}
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <NavLink
+                  to="/login"
                   className="rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap text-ink-600 hover:text-ink-900"
                 >
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <NavLink
-                to="/login"
-                className="rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap text-ink-600 hover:text-ink-900"
-              >
-                Sign in
-              </NavLink>
-            )}
-            {pathname !== "/book" && (
-              <Link to="/book" className={buttonClasses("accent", "sm", "whitespace-nowrap")}>
-                Book a visit
-              </Link>
-            )}
-          </nav>
+                  Sign in
+                </NavLink>
+              )}
+              {pathname !== "/book" && (
+                <Link to="/book" className={buttonClasses("accent", "sm", "whitespace-nowrap")}>
+                  Book a visit
+                </Link>
+              )}
+            </nav>
+          </div>
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 import { Reveal, RevealGroup, RevealItem } from "../../components/Reveal";
 import { useCountUp } from "../../hooks/useCountUp";
+import { formatNumber } from "../../lib/format";
 
 type Stat = { value: number; suffix: string; label: string; decimals: 0 | 1 };
 
@@ -11,16 +12,9 @@ const STATS: Stat[] = [
   { value: 92, suffix: "%", label: "Seen the same week", decimals: 0 },
 ];
 
-// One formatter per precision: toLocaleString(options) would build a new Intl.NumberFormat
-// on every animation frame.
-const FORMATTERS = {
-  0: new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }),
-  1: new Intl.NumberFormat("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
-};
-
 function Counter({ value, suffix, label, decimals }: Stat) {
   const { ref, value: current } = useCountUp<HTMLParagraphElement>(value);
-  const text = FORMATTERS[decimals].format(current);
+  const text = formatNumber(current, decimals);
   return (
     <div>
       <p

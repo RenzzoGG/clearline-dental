@@ -25,7 +25,7 @@ export function ServiceStep({
           <div
             key={i}
             aria-hidden="true"
-            className="h-28 animate-pulse rounded-2xl bg-ink-100 motion-reduce:animate-none"
+            className="h-28 animate-pulse rounded-2xl bg-ink-100 motion-off:animate-none"
           />
         ))}
       </div>
