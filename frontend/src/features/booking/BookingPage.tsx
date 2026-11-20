@@ -144,7 +144,9 @@ export default function BookingPage() {
         </div>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_20rem]">
-          <div>
+          {/* min-w-0: grid items default to min-width:auto, so the scrollable day picker
+              would otherwise widen the column (and the page) instead of scrolling. */}
+          <div className="min-w-0">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={state.step}
