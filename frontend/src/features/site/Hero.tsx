@@ -10,11 +10,22 @@ const HEADLINE = ["Gentle", "dental", "care,", "booked", "in", "a", "minute."];
  * once on load, and CSS runs them on the compositor instead of a JS frame loop. With
  * prefers-reduced-motion (`motion-safe:`) the content simply appears.
  */
-function fadeUp(delay: number, from?: string, duration?: number): CSSProperties {
+function fadeUp(
+  delay: number,
+  {
+    from,
+    duration,
+    slideOnly = false,
+  }: { from?: string; duration?: number; slideOnly?: boolean } = {},
+): CSSProperties {
   return {
     animationDelay: `${delay}s`,
     ...(duration && { animationDuration: `${duration}s` }),
     ...(from && { "--fade-from": from }),
+    // slideOnly: visible from the first paint (no fade). Used for the main text, which is
+    // the LCP element: Chrome ignores opacity-0 content, so a fade-in delays LCP until the
+    // first animation frame, which can sit behind React's render work on slow phones.
+    ...(slideOnly && { "--fade-opacity": 1 }),
   } as CSSProperties;
 }
 
@@ -35,7 +46,7 @@ export function Hero() {
       <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pt-16 pb-24 sm:px-6 md:pt-24 lg:grid-cols-[1.15fr_1fr]">
         <div>
           <p
-            style={fadeUp(0, undefined, 0.5)}
+            style={fadeUp(0, { duration: 0.5, slideOnly: true })}
             className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-100 motion-safe:animate-fade-up"
           >
             <Icon name="sparkle" className="size-4" /> Now booking same-week visits in Hermosillo
@@ -46,7 +57,7 @@ export function Hero() {
               <span
                 key={index}
                 className="mr-[0.25em] inline-block motion-safe:animate-fade-up"
-                style={fadeUp(0.1 + index * 0.06, "0.4em")}
+                style={fadeUp(0.1 + index * 0.06, { from: "0.4em", slideOnly: true })}
               >
                 {word === "minute." ? <span className="text-brand-600">{word}</span> : word}
               </span>
@@ -54,7 +65,7 @@ export function Hero() {
           </h1>
 
           <p
-            style={fadeUp(0.55)}
+            style={fadeUp(0.55, { slideOnly: true })}
             className="mt-6 max-w-xl text-lg text-ink-600 motion-safe:animate-fade-up"
           >
             Checkups, whitening, orthodontics and more — with clear prices, real-time availability
@@ -103,7 +114,7 @@ function BookingPreview() {
           {slots.map((slot, index) => (
             <span
               key={slot}
-              style={fadeUp(0.7 + index * 0.06, "8px", 0.4)}
+              style={fadeUp(0.7 + index * 0.06, { from: "8px", duration: 0.4 })}
               className={`rounded-xl py-2.5 text-center text-sm font-semibold motion-safe:animate-fade-up ${
                 index === 2 ? "bg-brand-700 text-white" : "bg-ink-50 text-ink-700"
               }`}
@@ -117,7 +128,7 @@ function BookingPreview() {
       {/* Outer: one-time entrance. Inner: endless float. Separate elements so the two
           animations don't fight over `transform`. */}
       <div
-        style={fadeUp(1.1, "16px", 0.5)}
+        style={fadeUp(1.1, { from: "16px", duration: 0.5 })}
         className="absolute -bottom-7 -left-2 motion-safe:animate-fade-up sm:-left-10"
       >
         <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-xl ring-1 ring-ink-100 motion-safe:animate-float">

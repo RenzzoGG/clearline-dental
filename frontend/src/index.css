@@ -21,7 +21,7 @@
   }
   @keyframes fade-up {
     from {
-      opacity: 0;
+      opacity: var(--fade-opacity, 0);
       transform: translateY(var(--fade-from, 12px));
     }
   }
