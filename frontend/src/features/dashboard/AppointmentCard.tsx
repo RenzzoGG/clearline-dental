@@ -58,8 +58,11 @@ export function AppointmentCard({
           className={`size-1.5 shrink-0 rounded-full ${STATUS_STYLES[status].dot}`}
           aria-hidden="true"
         />
-        {formatTime(appointment.starts_at)}
-        {showDentist && <span className="truncate font-medium">· {appointment.dentist_name}</span>}
+        {/* The time never wraps; the dentist name is what gets truncated (min-w-0). */}
+        <span className="shrink-0 whitespace-nowrap">{formatTime(appointment.starts_at)}</span>
+        {showDentist && (
+          <span className="min-w-0 truncate font-medium">· {appointment.dentist_name}</span>
+        )}
       </span>
       <span
         className={`block text-sm font-semibold ${status === "completed" ? "text-ink-500" : "text-ink-900"}`}
