@@ -1,0 +1,4 @@
+# Public site and booking are crawlable; the clinic dashboard and API are not.
+User-agent: *
+Disallow: /dashboard
+Disallow: /api/
