@@ -228,7 +228,7 @@ Si algo no está aquí, **se pregunta antes de instalarlo**.
   optimizadas. Meta: Lighthouse móvil ≥ 90.
 - Servicio `frontend` agregado a Docker Compose.
 
-### Fase 5b — Dirección de arte y motion del sitio público (implementada, pendiente de revisión)
+### Fase 5b — Dirección de arte y motion del sitio público ✅
 Plan detallado en [`MOTION-PLAN.md`](MOTION-PLAN.md): concepto "La línea clara", animaciones por sección,
 Motion (sin GSAP), presupuestos y sub-fases 5b.1–5b.7. Incluye llevar `/book` y `/login` a Lighthouse
 móvil ≥ 90.
