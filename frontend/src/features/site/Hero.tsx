@@ -56,9 +56,13 @@ export function Hero() {
         <div className="lg:col-span-7">
           <p
             style={fadeUp(0, { duration: 0.5, slideOnly: true })}
-            className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-100 motion-on:animate-fade-up"
+            className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold whitespace-nowrap text-brand-700 ring-1 ring-brand-100 motion-on:animate-fade-up"
           >
-            <Icon name="sparkle" className="size-4" /> Now booking same-week visits in Hermosillo
+            {/* Never wraps (short copy on phones): a badge that wrapped in the fallback font and
+                not in Plus Jakarta Sans moved the whole hero when the web font arrived (CLS). */}
+            <Icon name="sparkle" className="size-4" />
+            <span className="sm:hidden">Same-week visits · Hermosillo</span>
+            <span className="hidden sm:inline">Now booking same-week visits in Hermosillo</span>
           </p>
 
           <h1 className="mt-6 font-display text-[clamp(2.6rem,11.5vw,3.5rem)] leading-[1.04] tracking-[-0.02em] text-ink-900 sm:text-[4rem] lg:text-[4rem] xl:text-[4.5rem]">

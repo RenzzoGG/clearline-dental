@@ -168,3 +168,50 @@ Cada fase: construir → verificar yo mismo (lint, typecheck, tests, capturas, L
 - Build de producción (`vite preview`, puerto 4173) + Lighthouse (mediana de 3, móvil y escritorio) +
   script de presupuestos.
 - Solo commits locales. Nunca `git push`.
+
+---
+
+## 7. Resultado (implementado, 2026-11-20)
+
+Todo se midió contra el **build de producción** (`vite preview`), con Lighthouse en mediana de 3 corridas
+(con calentamiento y pausas entre corridas, porque esta laptop varía mucho) y confirmado con trazas propias.
+
+**Lighthouse — antes de 5b → después**
+
+| Ruta | Móvil antes | Móvil después | Escritorio antes | Escritorio después |
+|------|-------------|---------------|------------------|--------------------|
+| `/` | 92 | **93** | 100 | **100** |
+| `/book` | 63 | **94** | 99 | **100** |
+| `/login` | 85 | **93** | 100 | **100** |
+
+Accesibilidad, buenas prácticas y SEO: 100 en las 3 rutas. CLS ≤ 0.009. CTA arriba del pliegue en
+1440×900, 1366×768, 1280×720, 390×844 y 360×800 (verificado en las 15 combinaciones de tamaño × modo).
+
+**Presupuestos finales** (`npm run budgets`): JS crítico 107.1 KB gz (antes 154); features de Motion
+20.0 KB (asíncrono); mejoras del landing 0.8 KB; secciones del landing 8.1 KB; `/book` 23.1 KB;
+`/login` 19.2 KB; CSS 9.7 KB; imágenes 135.7 KB; fuentes 3 archivos woff2 en `/` y 2 en `/book`/`/login`.
+
+**Pendiente honesto:** el TBT móvil de `/` en Lighthouse queda en ~300 ms (meta ≤ 200). Las trazas
+reales con CPU ×4 dan ~180–210 ms; la diferencia es la simulación de Lighthouse en esta máquina.
+Conviene confirmarlo en CI o en Railway (fase 6).
+
+**Desviaciones respecto al plan (y por qué)**
+
+1. **Efectos ligados al scroll con CSS, no con `useScroll` de Motion.** La línea conductora, los
+   reveals de fotos y el trazo de la clínica usan `animation-timeline: view()` (cero JS, fuera del
+   hilo principal); el pin usa un listener pasivo + `requestAnimationFrame`. Motion se queda para el
+   flujo de reserva y el dashboard, y su motor ya no está en el bundle crítico.
+2. **Sin animaciones infinitas** (blobs y tarjeta flotante del hero): sin GPU recalculaban estilo en
+   cada frame y castigaban el TBT; además una marca tranquila no necesita movimiento perpetuo.
+3. **El titular no se desvanece:** solo se desliza desde su máscara. Con opacidad 0, Chrome registraba
+   el LCP hasta el primer frame de la animación.
+4. **La sonrisa final se dibuja al revelarse su tarjeta**, no ligada al scroll: tan cerca del final de
+   la página, en móvil nunca se alcanzaba el rango de scroll.
+5. **Equipo:** las tarjetas conservan iniciales y se usa una foto del equipo trabajando (con
+   cubrebocas). Poner caras reales de stock bajo nombres ficticios atribuiría una identidad falsa.
+6. **Fraunces estática** (400 + itálica, ~39 KB) en vez de la variable (65 KB), elegida sobre
+   Instrument Serif por legibilidad a 360 px. Plus Jakarta Sans se pide como rango (`400..800`):
+   con la lista de pesos Google devolvía 5 `@font-face` al mismo archivo y Chrome lo bajaba 4 veces.
+7. **Ruta crítica** (más allá del plan): router declarativo (sin data router), hero en el shell y el
+   resto del landing en un chunk diferido, plugin `route-preload`, `zod/mini`, paso de datos de la
+   reserva diferido, sin `Intl` al importar, `content-visibility: auto` en secciones fuera de pantalla.
