@@ -132,8 +132,9 @@ export default function BookingPage() {
   return (
     // overflow-x-clip: the sliding step transition (x: ±24px) must not cause sideways
     // scrolling on phones. "clip" (not "hidden") keeps the checklist's sticky positioning.
-    <section className="overflow-x-clip bg-white px-4 py-12 sm:px-6 md:py-16">
-      <div className="mx-auto max-w-6xl">
+    <section className="overflow-x-clip bg-white py-12 md:py-16">
+      {/* Padding inside the max-width box, like the header, so edges line up. */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <h1 className="text-3xl font-extrabold tracking-tight text-ink-900 sm:text-4xl">
           Book a visit
         </h1>
