@@ -10,19 +10,20 @@ export function ToothMark({ className = "size-8" }: { className?: string }) {
   );
 }
 
-/** compact: show only the tooth mark below the sm breakpoint (tight headers). */
-export function Logo({
-  inverted = false,
-  compact = false,
-}: {
-  inverted?: boolean;
-  compact?: boolean;
-}) {
+/**
+ * compact: in tight headers show only the tooth mark on narrow screens.
+ * "sm" hides the wordmark below 640px, "xs" below 400px. Wrap the logo in a
+ * link with an aria-label so the name is still announced.
+ */
+// Full class names so Tailwind can detect them.
+const COMPACT_CLASSES = { sm: "hidden sm:inline", xs: "hidden min-[400px]:inline" } as const;
+
+export function Logo({ inverted = false, compact }: { inverted?: boolean; compact?: "sm" | "xs" }) {
   return (
     <span className="inline-flex items-center gap-2.5">
       <ToothMark />
       <span
-        className={`text-lg font-extrabold tracking-tight whitespace-nowrap ${inverted ? "text-white" : "text-ink-900"} ${compact ? "hidden sm:inline" : ""}`}
+        className={`text-lg font-extrabold tracking-tight whitespace-nowrap ${inverted ? "text-white" : "text-ink-900"} ${compact ? COMPACT_CLASSES[compact] : ""}`}
       >
         Clearline<span className={inverted ? "text-mint-300" : "text-brand-600"}> Dental</span>
       </span>

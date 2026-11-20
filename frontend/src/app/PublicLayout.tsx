@@ -27,7 +27,7 @@ export default function PublicLayout() {
       <header className="sticky top-0 z-30 border-b border-ink-100 bg-white/85 backdrop-blur">
         <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link to="/" aria-label="Clearline Dental home">
-            <Logo />
+            <Logo compact="xs" />
           </Link>
           <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
             <a
@@ -41,7 +41,7 @@ export default function PublicLayout() {
                 {isStaff(user) && (
                   <NavLink
                     to="/dashboard"
-                    className="rounded-full px-3 py-2 text-sm font-semibold text-ink-600 hover:text-ink-900"
+                    className="rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap text-ink-600 hover:text-ink-900"
                   >
                     Dashboard
                   </NavLink>
@@ -49,7 +49,7 @@ export default function PublicLayout() {
                 <button
                   type="button"
                   onClick={() => void logout()}
-                  className="rounded-full px-3 py-2 text-sm font-semibold text-ink-600 hover:text-ink-900"
+                  className="rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap text-ink-600 hover:text-ink-900"
                 >
                   Sign out
                 </button>
@@ -57,13 +57,13 @@ export default function PublicLayout() {
             ) : (
               <NavLink
                 to="/login"
-                className="rounded-full px-3 py-2 text-sm font-semibold text-ink-600 hover:text-ink-900"
+                className="rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap text-ink-600 hover:text-ink-900"
               >
                 Sign in
               </NavLink>
             )}
             {pathname !== "/book" && (
-              <Link to="/book" className={buttonClasses("accent", "sm")}>
+              <Link to="/book" className={buttonClasses("accent", "sm", "whitespace-nowrap")}>
                 Book a visit
               </Link>
             )}
