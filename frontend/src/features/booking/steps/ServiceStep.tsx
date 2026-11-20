@@ -1,7 +1,9 @@
-import { Spinner } from "../../../components/ui/Spinner";
 import { formatDuration, formatPrice } from "../../../lib/format";
 import { useServices } from "../../site/queries";
 import { ChoiceCard } from "../ChoiceCard";
+
+// The demo clinic offers six services; a close guess keeps the skeleton honest.
+const SKELETON_CARDS = 6;
 
 export function ServiceStep({
   value,
@@ -11,7 +13,24 @@ export function ServiceStep({
   onChange: (id: number) => void;
 }) {
   const { data: services, isPending, isError } = useServices();
-  if (isPending) return <Spinner label="Loading services…" />;
+  if (isPending) {
+    // Same footprint as the loaded cards (h-28 = their measured 112px), so the buttons,
+    // checklist and footer don't jump when the list arrives (CLS).
+    return (
+      <div className="grid gap-3 sm:grid-cols-2">
+        <span className="sr-only" role="status">
+          Loading services…
+        </span>
+        {Array.from({ length: SKELETON_CARDS }, (_, i) => (
+          <div
+            key={i}
+            aria-hidden="true"
+            className="h-28 animate-pulse rounded-2xl bg-ink-100 motion-reduce:animate-none"
+          />
+        ))}
+      </div>
+    );
+  }
   if (isError) return <p className="text-red-700">Services could not be loaded. Please refresh.</p>;
 
   return (
