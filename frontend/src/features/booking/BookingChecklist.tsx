@@ -40,7 +40,7 @@ export function BookingChecklist({ items }: { items: ChecklistItem[] }) {
             </span>
             <div className="min-w-0">
               <span
-                className={`relative inline-block font-semibold ${done ? "text-ink-400" : "text-ink-800"}`}
+                className={`relative inline-block font-semibold ${done ? "text-ink-500" : "text-ink-800"}`}
               >
                 {STEP_LABELS[step]}
                 <motion.span

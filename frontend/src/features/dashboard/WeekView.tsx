@@ -48,7 +48,7 @@ export function WeekView({
               </button>
               <div className="max-h-[36rem] space-y-1.5 overflow-y-auto pr-1">
                 {items.length === 0 ? (
-                  <p className="rounded-xl bg-ink-50 px-2 py-3 text-center text-xs text-ink-400">
+                  <p className="rounded-xl bg-ink-50 px-2 py-3 text-center text-xs text-ink-500">
                     No appointments
                   </p>
                 ) : (

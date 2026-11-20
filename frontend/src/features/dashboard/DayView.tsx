@@ -61,7 +61,7 @@ export function DayView({
             {hours.map((minutes) => (
               <span
                 key={minutes}
-                className="absolute right-2 -translate-y-1/2 text-xs text-ink-400"
+                className="absolute right-2 -translate-y-1/2 text-xs text-ink-500"
                 style={{ top: (minutes - gridStart) * PX_PER_MINUTE }}
               >
                 {minutes === gridStart ? "" : label(minutes)}

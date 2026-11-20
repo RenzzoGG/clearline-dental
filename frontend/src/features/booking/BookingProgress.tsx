@@ -50,7 +50,7 @@ export function BookingProgress({
                     ? "text-brand-700"
                     : itemIndex < index
                       ? "text-ink-700 hover:text-brand-700"
-                      : "text-ink-400",
+                      : "text-ink-500",
                   reachable && !current ? "cursor-pointer" : "cursor-default",
                 ].join(" ")}
               >
