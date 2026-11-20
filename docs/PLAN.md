@@ -138,6 +138,10 @@ Si algo no está aquí, **se pregunta antes de instalarlo**.
   `@testing-library/dom` (peer de Testing Library), `@testing-library/user-event`,
   `typescript-eslint`, `@eslint/js`, `eslint-plugin-react-hooks`, `globals` (ESLint para TS/React)
 - Gestor de paquetes: `npm` (decidido en la fase 5: viene con Node, sin corepack ni pasos extra)
+- Aprobadas en la fase 5b: `sharp` (dev) — convierte las fotos de stock a AVIF/WebP en varios anchos
+  (script `frontend/scripts/optimize-images.mjs`).
+- Fuente de display serif (Fraunces o Instrument Serif) desde Google Fonts — no es paquete npm; se carga
+  igual que Plus Jakarta Sans (sin bloquear el render).
 
 **Infra**
 - Imágenes: `python:3.13-slim`, `node:22-alpine`, `postgres:17-alpine`
@@ -223,6 +227,11 @@ Si algo no está aquí, **se pregunta antes de instalarlo**.
 - Animar solo `transform` y `opacity` (GPU), lazy-load de rutas (`React.lazy`), imágenes
   optimizadas. Meta: Lighthouse móvil ≥ 90.
 - Servicio `frontend` agregado a Docker Compose.
+
+### Fase 5b — Dirección de arte y motion del sitio público
+Plan detallado en [`MOTION-PLAN.md`](MOTION-PLAN.md): concepto "La línea clara", animaciones por sección,
+Motion (sin GSAP), presupuestos y sub-fases 5b.1–5b.7. Incluye llevar `/book` y `/login` a Lighthouse
+móvil ≥ 90.
 
 ### Fase 6 — Tests, CI y deploy
 - Backend: pytest con cobertura (meta ≥ 85%).
