@@ -125,7 +125,7 @@ function BookingPreview() {
           opacity: { delay: 1.1, duration: 0.5 },
           y: { delay: 1.6, duration: 5, repeat: Infinity, ease: "easeInOut" },
         }}
-        className="absolute -bottom-7 -left-4 flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-xl ring-1 ring-ink-100 sm:-left-10"
+        className="absolute -bottom-7 -left-2 flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-xl ring-1 ring-ink-100 sm:-left-10"
       >
         <span className="grid size-9 place-items-center rounded-full bg-emerald-100 text-emerald-700">
           <Icon name="check" className="size-5" />
