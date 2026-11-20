@@ -1,6 +1,15 @@
 import { useReducedMotion } from "motion/react";
 import { useState, type ReactNode } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  LabelList,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { Spinner } from "../../components/ui/Spinner";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
@@ -15,7 +24,8 @@ const RANGES = [
 ] as const;
 
 const BRAND = "#227a70";
-const CORAL = "#f4704f";
+// coral-600: 3.8:1 against white, above the 3:1 WCAG minimum for chart marks.
+const CORAL = "#de5636";
 
 export default function InsightsPage() {
   useDocumentTitle("Insights");
@@ -111,7 +121,7 @@ export default function InsightsPage() {
                 <BarChart
                   data={stats.by_service}
                   layout="vertical"
-                  margin={{ top: 0, right: 16, bottom: 0, left: 8 }}
+                  margin={{ top: 0, right: 40, bottom: 0, left: 8 }}
                 >
                   <XAxis type="number" allowDecimals={false} hide />
                   <YAxis
@@ -129,7 +139,14 @@ export default function InsightsPage() {
                     fill={CORAL}
                     radius={[0, 6, 6, 0]}
                     isAnimationActive={!reduceMotion}
-                  />
+                  >
+                    {/* Direct labels: the value is readable without hovering (touch, keyboard). */}
+                    <LabelList
+                      dataKey="count"
+                      position="right"
+                      style={{ fontSize: 12, fontWeight: 600, fill: "#3a444c" }}
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
