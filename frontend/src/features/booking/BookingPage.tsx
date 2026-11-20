@@ -130,7 +130,9 @@ export default function BookingPage() {
   const next = () => dispatch({ type: "next", context });
 
   return (
-    <section className="bg-white px-4 py-12 sm:px-6 md:py-16">
+    // overflow-x-clip: the sliding step transition (x: ±24px) must not cause sideways
+    // scrolling on phones. "clip" (not "hidden") keeps the checklist's sticky positioning.
+    <section className="overflow-x-clip bg-white px-4 py-12 sm:px-6 md:py-16">
       <div className="mx-auto max-w-6xl">
         <h1 className="text-3xl font-extrabold tracking-tight text-ink-900 sm:text-4xl">
           Book a visit
