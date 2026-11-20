@@ -2,6 +2,7 @@ import { RevealGroup, RevealItem } from "../../components/Reveal";
 import { useDentists } from "./queries";
 import { SectionHeader } from "./SectionHeader";
 import { OFFSCREEN_SECTION } from "./offscreen";
+import { Thread } from "./Thread";
 
 const AVATAR_TONES = [
   "bg-brand-200 text-brand-900",
@@ -15,7 +16,8 @@ export function TeamSection() {
   if (!dentists?.length) return null;
 
   return (
-    <section className={`${OFFSCREEN_SECTION} bg-mint-50 py-24 lg:py-32`}>
+    <section className={`${OFFSCREEN_SECTION} relative isolate bg-mint-50 py-24 lg:py-32`}>
+      <Thread />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <SectionHeader
           number="05"

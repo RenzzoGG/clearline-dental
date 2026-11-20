@@ -3,6 +3,7 @@ import { useCountUp } from "../../hooks/useCountUp";
 import { formatNumber } from "../../lib/format";
 import { SectionHeader } from "./SectionHeader";
 import { OFFSCREEN_SECTION } from "./offscreen";
+import { Thread } from "./Thread";
 
 type Stat = { value: number; suffix: string; label: string; decimals: 0 | 1 };
 
@@ -40,7 +41,8 @@ function Counter({ value, suffix, label, decimals }: Stat) {
 
 export function StatsSection() {
   return (
-    <section className={`${OFFSCREEN_SECTION} bg-brand-900 py-24 lg:py-32`}>
+    <section className={`${OFFSCREEN_SECTION} relative isolate bg-brand-900 py-24 lg:py-32`}>
+      <Thread tone="dark" />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <SectionHeader
           number="04"

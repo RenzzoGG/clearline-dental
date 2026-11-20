@@ -5,10 +5,12 @@ import { buttonClasses } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
 import { SectionHeader } from "./SectionHeader";
 import { OFFSCREEN_SECTION } from "./offscreen";
+import { Thread } from "./Thread";
 
 export function VisitSection() {
   return (
-    <section className={`${OFFSCREEN_SECTION} bg-white py-24 lg:py-32`}>
+    <section className={`${OFFSCREEN_SECTION} relative isolate bg-white py-24 lg:py-32`}>
+      <Thread />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <SectionHeader
           number="06"
@@ -71,6 +73,22 @@ export function VisitSection() {
           >
             Book a visit <Icon name="arrowRight" className="size-5" />
           </Link>
+          {/* The clear line closes the page as a smile. */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 240 40"
+            fill="none"
+            className="relative mt-6 h-8 w-56 text-white/80 sm:w-64"
+          >
+            <path
+              d="M6 8 C 60 38, 180 38, 234 8"
+              pathLength={1}
+              stroke="currentColor"
+              strokeWidth={3}
+              strokeLinecap="round"
+              className="smile-path-reveal"
+            />
+          </svg>
         </Reveal>
       </div>
     </section>

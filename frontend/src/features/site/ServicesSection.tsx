@@ -6,13 +6,18 @@ import { formatDuration, formatPrice } from "../../lib/format";
 import { useServices } from "./queries";
 import { SectionHeader } from "./SectionHeader";
 import { OFFSCREEN_SECTION } from "./offscreen";
+import { Thread } from "./Thread";
 
 /** 01 — Services as an editorial numbered list (number · name · duration and price). */
 export function ServicesSection() {
   const { data: services, isPending, isError } = useServices();
 
   return (
-    <section id="services" className={`${OFFSCREEN_SECTION} scroll-mt-20 bg-white py-24 lg:py-32`}>
+    <section
+      id="services"
+      className={`${OFFSCREEN_SECTION} relative isolate scroll-mt-20 bg-white py-24 lg:py-32`}
+    >
+      <Thread />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <SectionHeader
           number="01"
@@ -39,8 +44,13 @@ export function ServicesSection() {
               <RevealItem key={service.id} index={index}>
                 <article
                   data-service-row
-                  className="group grid grid-cols-[3rem_1fr] gap-x-4 gap-y-1 border-b border-ink-200 py-6 transition-colors hover:bg-mint-50/60 sm:grid-cols-[4rem_1fr_auto] sm:items-baseline sm:gap-x-6 sm:px-3"
+                  className="group relative grid grid-cols-[3rem_1fr] gap-x-4 gap-y-1 border-b border-ink-200 py-6 transition-colors hover:bg-mint-50/60 sm:grid-cols-[4rem_1fr_auto] sm:items-baseline sm:gap-x-6 sm:px-3"
                 >
+                  {/* The clear line underlines the row on hover. */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0 -bottom-px h-0.5 origin-left scale-x-0 bg-brand-500 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-off:transition-none"
+                  />
                   <span
                     aria-hidden="true"
                     className="row-span-2 font-display text-3xl leading-none text-brand-600 sm:row-span-1"

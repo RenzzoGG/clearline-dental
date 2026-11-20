@@ -127,3 +127,38 @@
     stroke-dashoffset: 1;
   }
 }
+
+/* The thread (features/site/Thread.tsx): positioned in the section-number column, from
+   below the number to the section's end. */
+.thread-line {
+  top: 15.5rem;
+  left: calc(max(1.5rem, (100% - 72rem) / 2 + 1.5rem) + 1.2rem);
+}
+/* Final smile (VisitSection): drawn once when its card is revealed. A scroll-linked range
+   can't work here: near the end of the page it never scrolls far enough on phones. */
+.smile-path-reveal {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+[data-motion="on"] .reveal:not([data-revealed]) .smile-path-reveal {
+  stroke-dashoffset: 1;
+}
+[data-motion="on"] .reveal[data-revealed] .smile-path-reveal {
+  animation: draw-line 1.2s var(--ease-soft) 0.5s both;
+}
+/* Thread: scroll-driven drawing where supported (runs off the main thread, no JS).
+   Elsewhere, or with motion off, it is simply drawn. `animation-timeline` must follow the
+   shorthand. */
+@supports (animation-timeline: view()) {
+  [data-motion="on"] .thread-line {
+    animation: thread-draw linear both;
+    animation-timeline: view();
+    /* Ends early enough that the last section (near the page end) still finishes. */
+    animation-range: entry 0% cover 40%;
+  }
+}
+@keyframes thread-draw {
+  from {
+    transform: scaleY(0);
+  }
+}

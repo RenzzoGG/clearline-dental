@@ -1,6 +1,7 @@
 import { RevealGroup, RevealItem } from "../../components/Reveal";
 import { SectionHeader } from "./SectionHeader";
 import { OFFSCREEN_SECTION } from "./offscreen";
+import { Thread } from "./Thread";
 
 export const BOOKING_STEPS = [
   {
@@ -26,8 +27,9 @@ export function HowItWorksSection() {
   return (
     <section
       id="how-it-works"
-      className={`${OFFSCREEN_SECTION} scroll-mt-20 bg-mint-50 py-24 lg:py-32`}
+      className={`${OFFSCREEN_SECTION} relative isolate scroll-mt-20 bg-mint-50 py-24 lg:py-32`}
     >
+      <Thread />
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <SectionHeader
           number="02"
