@@ -25,6 +25,9 @@
   --color-coral-400: #ff8f72;
   --color-coral-500: #f4704f;
   --color-coral-600: #de5636;
+  /* 700/800 carry white text: 4.9:1 and 6.4:1 (WCAG AA for normal text). */
+  --color-coral-700: #c4472a;
+  --color-coral-800: #a83a21;
 
   --color-ink-50: #f6f8f9;
   --color-ink-100: #eceff2;

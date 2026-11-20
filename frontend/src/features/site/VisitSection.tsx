@@ -37,7 +37,7 @@ export function VisitSection() {
 
         <Reveal
           delay={0.1}
-          className="relative overflow-hidden rounded-3xl bg-coral-500 p-8 text-white sm:p-12"
+          className="relative overflow-hidden rounded-3xl bg-coral-700 p-8 text-white sm:p-12"
         >
           <div
             aria-hidden="true"
@@ -52,7 +52,7 @@ export function VisitSection() {
           </p>
           <Link
             to="/book"
-            className={buttonClasses("secondary", "lg", "relative mt-8 text-coral-600 ring-0")}
+            className={buttonClasses("secondary", "lg", "relative mt-8 text-coral-700 ring-0")}
           >
             Book a visit <Icon name="arrowRight" className="size-5" />
           </Link>

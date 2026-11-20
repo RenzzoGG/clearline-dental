@@ -3,7 +3,7 @@ import { useDentists } from "./queries";
 
 const AVATAR_TONES = [
   "bg-brand-200 text-brand-900",
-  "bg-coral-100 text-coral-600",
+  "bg-coral-100 text-coral-800",
   "bg-mint-200 text-brand-800",
   "bg-ink-200 text-ink-800",
 ];
