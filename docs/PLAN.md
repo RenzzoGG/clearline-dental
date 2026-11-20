@@ -147,6 +147,8 @@ Si algo no está aquí, **se pregunta antes de instalarlo**.
 - Imágenes: `python:3.13-slim`, `node:22-alpine`, `postgres:17-alpine`
 - GitHub Actions oficiales: `actions/checkout`, `actions/setup-python`, `actions/setup-node`,
   `astral-sh/setup-uv`
+- Aprobada en la fase 6: `actions/upload-artifact` (solo para subir el reporte de Playwright cuando
+  falla un E2E)
 
 > El calendario del dashboard se construirá a mano (grid de CSS + date-fns) para no meter
 > una librería pesada. Si se vuelve demasiado, pregunto antes de agregar una.

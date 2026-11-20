@@ -1,6 +1,7 @@
 # Clearline Dental — CI, endurecimiento y deploy (Fase 6)
 
-> Estado: **propuesta para revisión.** No se implementa nada hasta que se apruebe este documento.
+> Estado: **aprobado** (con App Sleeping encendido; ver sección 7). Implementación en las sub-fases
+> 6.1–6.5.
 >
 > Reglas: Renzzo configura todos los secretos y los ajustes de Railway / Cloudflare / GitHub.
 > Este documento solo nombra variables (nunca valores). Solo commits locales; nunca `git push`.
@@ -81,9 +82,8 @@ el `DJANGO_SECRET_KEY` de CI se genera al vuelo en el propio job (es desechable)
 Las contraseñas demo de CI también se generan al vuelo dentro del job (no son secretos del repo).
 Si un E2E falla, el job sube el reporte HTML y las capturas como *artifact*.
 
-Acciones usadas (ya aprobadas): `actions/checkout`, `actions/setup-python`, `actions/setup-node`,
-`astral-sh/setup-uv`. **Una nueva que pediría aprobar:** `actions/upload-artifact` (solo para subir
-el reporte de Playwright cuando algo falla). Si prefieres no agregarla, se omite.
+Acciones usadas (aprobadas): `actions/checkout`, `actions/setup-python`, `actions/setup-node`,
+`astral-sh/setup-uv` y `actions/upload-artifact` (solo para el reporte de Playwright cuando falla).
 
 Dependencias nuevas que esta fase usa y **ya están aprobadas**: `gunicorn`, `whitenoise`,
 `pytest-cov`, `@playwright/test`. No hace falta ninguna otra.
@@ -149,7 +149,7 @@ Respuesta al exceder: `429` con `Retry-After`. Detrás del proxy de Railway, la 
 | Deploy → Healthcheck Path | `/api/health/` |
 | Deploy → Healthcheck Timeout | `120` segundos |
 | Deploy → Restart Policy | On Failure (máx. 3 reintentos) |
-| Deploy → Serverless (App Sleeping) | **Apagado** (ver sección 7) |
+| Deploy → Serverless (App Sleeping) | **Encendido** (ver sección 7: arranque en frío) |
 | Networking → Custom Domain | `clearline.renzzogg.com` (puerto 8080, el `$PORT` que asigna Railway) |
 | Regions | La más cercana a tus usuarios (p. ej. US West) |
 
@@ -243,24 +243,39 @@ Todo en una transacción: si algo falla, la base queda como estaba. Corre como s
 
 ---
 
-## 7. Estimación de uso en Railway (plan Hobby)
+## 7. Estimación de uso en Railway (plan Hobby) y App Sleeping
 
 > Los precios cambian; verifica los vigentes en la página de precios de Railway. Referencia usada:
-> Hobby = US$5/mes que incluye US$5 de consumo; ~US$10 por GB-mes de RAM, ~US$20 por vCPU-mes,
-> ~US$0.15 por GB-mes de volumen, ~US$0.05 por GB de salida.
+> Hobby = US$5/mes que incluye US$5 de consumo (compartido con tus otros proyectos: Stocktill, Pulse,
+> portafolio); ~US$10 por GB-mes de RAM, ~US$20 por vCPU-mes, ~US$0.15 por GB-mes de volumen,
+> ~US$0.05 por GB de salida.
 
-| Servicio | RAM típica | CPU típica (demo con poco tráfico) | Costo aprox./mes |
-|----------|-----------|-------------------------------------|------------------|
-| web (gunicorn, 2 workers) | ~180 MB | ~0.01–0.02 vCPU | ~US$2.0–2.3 |
-| Postgres | ~100–150 MB | ~0.01 vCPU | ~US$1.2–1.7 |
+**App Sleeping encendido en `web`** (decisión aprobada): si el servicio no envía tráfico de salida
+durante ~10 minutos, Railway lo duerme y deja de cobrar su CPU/RAM. La siguiente petición lo despierta.
+
+| Servicio | RAM típica | CPU típica | Costo aprox./mes |
+|----------|-----------|------------|------------------|
+| web (gunicorn, 2 workers), despierto unas pocas horas al día | ~180 MB mientras está despierto | ~0.01–0.02 vCPU | ~US$0.2–0.6 |
+| Postgres (siempre encendido) | ~100–150 MB | ~0.01 vCPU | ~US$1.2–1.7 |
 | Volumen de Postgres | < 0.5 GB | — | ~US$0.08 |
 | demo-reset (cron, ~20 s/día) | — | — | < US$0.05 |
-| Salida de red | < 2 GB (sitio de ~250 KB por visita) | — | < US$0.10 |
-| **Total** | | | **~US$3.5–4.3** (dentro de los US$5 incluidos) |
+| Salida de red | < 2 GB (~250 KB por visita) | — | < US$0.10 |
+| **Total** | | | **~US$1.6–2.5/mes** |
 
-Palancas si se acerca al límite: `WEB_CONCURRENCY=1` (≈ −60 MB) o activar *App Sleeping* en `web`
-(ahorra casi todo el costo del servicio, pero la primera visita tras dormir tarda unos segundos en
-despertar, lo cual afecta a una demo de portafolio y a Lighthouse; por eso queda apagado).
+**Arranque en frío (cold start) — qué implica y cómo queda cubierto:**
+- La primera visita después de dormir espera a que arranque el contenedor (Django + gunicorn):
+  típicamente **unos segundos**. Las siguientes son normales. Se mide en la sub-fase 6.5.
+- **Nada pesado al arrancar:** las migraciones y `createcachetable` corren en el *Pre-deploy
+  Command* (una vez por deploy), no al despertar. El `CMD` de la imagen solo lanza gunicorn.
+- **El healthcheck** de Railway solo se usa al desplegar; despertar no lo vuelve a correr.
+- **Los datos demo no dependen de `web`:** viven en Postgres (siempre encendido) y los rehace el cron
+  `demo-reset`, que corre aunque `web` esté dormido.
+- **Nada que lo mantenga despierto sin querer:** sin pings salientes ni telemetría; las conexiones a
+  Postgres inactivas no envían tráfico.
+- **Lighthouse en producción** (6.5): se mide con el servicio ya despierto (una petición previa) y el
+  tiempo del arranque en frío se reporta aparte, para no mezclar ambas cosas.
+
+Palanca extra si hiciera falta: `WEB_CONCURRENCY=1` (≈ −60 MB mientras está despierto).
 
 ---
 
