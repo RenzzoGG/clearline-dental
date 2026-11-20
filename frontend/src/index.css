@@ -1,6 +1,42 @@
 @import "tailwindcss";
 
 @theme {
+  /* Infinite decorative motion lives in CSS so it runs on the compositor (see Hero). */
+  --animate-drift: drift 14s ease-in-out infinite;
+  --animate-drift-up: drift-up 12s ease-in-out infinite;
+  --animate-float: float 5s ease-in-out 1.6s infinite;
+  /* One-time entrances; `both` keeps them hidden during their per-element delay. */
+  --animate-fade-up: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-rise-in: rise-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @keyframes drift {
+    50% {
+      transform: translate(-12px, 24px);
+    }
+  }
+  @keyframes drift-up {
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(var(--fade-from, 12px));
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(32px) scale(0.97);
+    }
+  }
+  @keyframes float {
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --color-brand-50: #effaf8;
