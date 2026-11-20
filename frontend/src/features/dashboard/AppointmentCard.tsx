@@ -46,7 +46,7 @@ export function AppointmentCard({
       style={style}
       aria-label={`${formatTime(appointment.starts_at)} ${appointment.patient_name}, ${appointment.service_name}, ${STATUS_LABELS[status]}`}
       className={[
-        "group w-full overflow-hidden rounded-xl px-2.5 py-1.5 text-left ring-1 transition-[background-color,opacity,box-shadow] duration-300",
+        "group overflow-hidden rounded-xl px-2.5 py-1.5 text-left ring-1 transition-[background-color,opacity,box-shadow] duration-300",
         "hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500",
         STATUS_STYLES[status].card,
         status === "cancelled" ? "opacity-60" : "",

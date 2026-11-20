@@ -58,6 +58,7 @@ export function WeekView({
                       appointment={appointment}
                       onOpen={onOpen}
                       showDentist
+                      className="w-full"
                     />
                   ))
                 )}

@@ -89,6 +89,7 @@ export function DayView({
                       appointment={appointment}
                       onOpen={onOpen}
                       compact={minutes < 45}
+                      // No w-full here: left/right insets define the width inside the column.
                       className="absolute inset-x-1"
                       style={{ top: top + 1, height: Math.max(minutes * PX_PER_MINUTE - 2, 24) }}
                     />
