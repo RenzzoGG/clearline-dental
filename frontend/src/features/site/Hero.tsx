@@ -76,10 +76,10 @@ export function Hero() {
           </p>
 
           <div style={fadeUp(0.7)} className="mt-9 flex flex-wrap gap-3 motion-on:animate-fade-up">
-            <Link to="/book" className={buttonClasses("accent", "lg")}>
+            <Link to="/book" data-magnetic className={buttonClasses("accent", "lg")}>
               Book a visit <Icon name="arrowRight" className="size-5" />
             </Link>
-            <a href="#services" className={buttonClasses("secondary", "lg")}>
+            <a href="#services" data-magnetic className={buttonClasses("secondary", "lg")}>
               See services
             </a>
           </div>
@@ -95,22 +95,58 @@ function HeadlineLines({ lines, className }: { lines: readonly string[]; classNa
   return (
     <span aria-hidden="true" className={className}>
       {lines.map((line, index) => (
+        // Mask: each line slides up from behind its own clip box. The clip margin and the
+        // padding/negative margin keep italic overhangs, descenders and the smile visible.
         <span
           key={line}
-          className="block whitespace-nowrap motion-on:animate-fade-up"
-          style={fadeUp(0.1 + index * 0.08, { from: "0.4em", slideOnly: true })}
+          className="-mb-[0.24em] block overflow-clip pb-[0.24em] [overflow-clip-margin:0.25em]"
         >
-          {line.endsWith("minute.") ? (
-            <>
-              {line.slice(0, -"minute.".length)}
-              <em className="text-brand-600">minute.</em>
-            </>
-          ) : (
-            line
-          )}
+          <span
+            className="block whitespace-nowrap motion-on:animate-line-up"
+            style={{ animationDelay: `${0.08 + index * 0.1}s` }}
+          >
+            {line.endsWith("minute.") ? (
+              <>
+                {line.slice(0, -"minute.".length)}
+                <SmileWord />
+              </>
+            ) : (
+              line
+            )}
+          </span>
         </span>
       ))}
     </span>
+  );
+}
+
+/**
+ * "minute." with "the clear line" drawn under it as a smile (the page's visual thread).
+ * pathLength=1 lets CSS draw it with stroke-dashoffset 1 -> 0; with motion off it is
+ * simply there. No vector-effect="non-scaling-stroke": with the stretched viewBox it makes
+ * Chrome measure the dash in screen units, so the normalized length stops covering the path.
+ */
+function SmileWord() {
+  return (
+    <em className="relative inline-block text-brand-600">
+      minute.
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 120 24"
+        preserveAspectRatio="none"
+        fill="none"
+        className="absolute top-[88%] left-[2%] h-[0.3em] w-[92%] overflow-visible text-brand-500"
+      >
+        <path
+          d="M3 5 C 34 21, 86 21, 117 5"
+          pathLength={1}
+          stroke="currentColor"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          className="smile-path"
+        />
+      </svg>
+    </em>
   );
 }
 

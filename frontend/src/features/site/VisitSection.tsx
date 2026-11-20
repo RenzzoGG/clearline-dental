@@ -66,6 +66,7 @@ export function VisitSection() {
           </p>
           <Link
             to="/book"
+            data-magnetic
             className={buttonClasses("secondary", "lg", "relative mt-8 text-coral-700 ring-0")}
           >
             Book a visit <Icon name="arrowRight" className="size-5" />
