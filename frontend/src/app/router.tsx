@@ -18,7 +18,9 @@ const InsightsPage = lazy(() => import("../features/dashboard/InsightsPage"));
 const page = (element: ReactNode) => (
   <Suspense
     fallback={
-      <div className="grid min-h-[50vh] place-items-center">
+      // Full viewport height: keeps the footer below the fold while a route chunk loads,
+      // so it doesn't visibly jump down when the page renders (CLS).
+      <div className="grid min-h-dvh place-items-center">
         <Spinner label="Loading…" />
       </div>
     }
