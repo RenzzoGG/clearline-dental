@@ -225,3 +225,40 @@
 [data-active-step="3"] .pin-node:nth-of-type(4) .pin-label {
   color: var(--color-ink-900);
 }
+
+/* Photos (features/site/Photo.tsx) and the clinic line stroke: scroll-linked reveals as
+   CSS scroll-driven animations. Shown as-is without support or with motion off. */
+.line-scroll {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+@supports (animation-timeline: view()) {
+  [data-motion="on"] .photo-reveal {
+    animation: photo-open linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 35%;
+  }
+  [data-motion="on"] .photo-reveal-img {
+    animation: photo-settle linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 45%;
+  }
+  [data-motion="on"] .line-scroll {
+    animation: draw-line linear both;
+    animation-timeline: view();
+    animation-range: entry 20% cover 50%;
+  }
+}
+@keyframes photo-open {
+  from {
+    clip-path: inset(10% 6% 10% 6% round 1.5rem);
+  }
+  to {
+    clip-path: inset(0 round 1.5rem);
+  }
+}
+@keyframes photo-settle {
+  from {
+    transform: scale(1.06);
+  }
+}

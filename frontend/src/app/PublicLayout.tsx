@@ -4,6 +4,7 @@ import { Link, NavLink, useLocation } from "react-router";
 import { buttonClasses } from "../components/ui/Button";
 import { Logo } from "../components/ui/Logo";
 import { MotionToggle } from "../components/ui/MotionToggle";
+import { PHOTOS } from "../features/site/photo-credits";
 import { useAuth } from "../features/auth/auth-context";
 import { isStaff } from "../lib/types";
 import { AnimatedOutlet } from "./AnimatedOutlet";
@@ -94,6 +95,25 @@ export default function PublicLayout() {
             made.
           </p>
         </div>
+        <p className="mx-auto max-w-6xl px-4 pb-8 text-xs text-brand-200 sm:px-6">
+          Photos on{" "}
+          <a href="https://unsplash.com" className="underline hover:text-white">
+            Unsplash
+          </a>{" "}
+          (Unsplash License):{" "}
+          {Object.values(PHOTOS).map((photo, index, all) => (
+            <span key={photo.file}>
+              <a href={photo.photoUrl} className="underline hover:text-white">
+                {photo.title}
+              </a>{" "}
+              by{" "}
+              <a href={photo.authorUrl} className="underline hover:text-white">
+                {photo.author}
+              </a>
+              {index < all.length - 1 ? " · " : "."}
+            </span>
+          ))}
+        </p>
       </footer>
     </div>
   );

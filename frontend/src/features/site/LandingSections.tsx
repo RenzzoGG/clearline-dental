@@ -1,3 +1,4 @@
+import { ClinicSection } from "./ClinicSection";
 import { HowItWorksSection } from "./HowItWorksSection";
 import { ServicesSection } from "./ServicesSection";
 import { StatsSection } from "./StatsSection";
@@ -10,6 +11,7 @@ export default function LandingSections() {
     <>
       <ServicesSection />
       <HowItWorksSection />
+      <ClinicSection />
       <StatsSection />
       <TeamSection />
       <VisitSection />

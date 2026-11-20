@@ -77,7 +77,8 @@ for (const [name, size, budget] of results) {
   const ok = size <= budget;
   failed ||= !ok;
   console.log(
-    `${ok ? "ok  " : "FAIL"}  ${name.padEnd(40)} ${(size / KB).toFixed(1).padStart(6)} KB gz / ${budget / KB} KB`,
+    // Images are measured as files (already compressed formats); everything else gzipped.
+    `${ok ? "ok  " : "FAIL"}  ${name.padEnd(40)} ${(size / KB).toFixed(1).padStart(6)} KB${name.includes("images") ? "   " : " gz"} / ${budget / KB} KB`,
   );
 }
 process.exit(failed ? 1 : 0);
