@@ -203,7 +203,7 @@ Si algo no está aquí, **se pregunta antes de instalarlo**.
 - Registro de pacientes; endpoint público de disponibilidad.
 - Tests de permisos (un paciente **no** puede ver citas de otro → 404).
 
-### Fase 5 — Frontend
+### Fase 5 — Frontend ✅
 **5a. Sitio público animado**
 - Landing con secciones de color, reveals al hacer scroll (`whileInView`), contadores
   animados (pacientes atendidos, años, etc.), transiciones suaves entre páginas
