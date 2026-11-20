@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { m } from "motion/react";
 
 import { STEP_LABELS, STEPS, type Step } from "./booking-reducer";
 
@@ -26,7 +26,7 @@ export function BookingProgress({
         aria-valuetext={`Step ${index + 1} of ${STEPS.length}: ${STEP_LABELS[step]}`}
       >
         {/* scaleX instead of width: a compositor-only animation. */}
-        <motion.div
+        <m.div
           className="h-full origin-left rounded-full bg-gradient-to-r from-brand-500 to-brand-700"
           initial={false}
           animate={{ scaleX: progress }}

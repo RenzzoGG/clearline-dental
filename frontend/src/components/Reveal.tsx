@@ -1,4 +1,4 @@
-import { motion, type Variants } from "motion/react";
+import { m, type Variants } from "motion/react";
 import type { ReactNode } from "react";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -34,7 +34,7 @@ export function Reveal({
   delay?: number;
 }) {
   return (
-    <motion.div
+    <m.div
       className={className}
       initial="hidden"
       whileInView="visible"
@@ -43,7 +43,7 @@ export function Reveal({
       custom={delay}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -58,7 +58,7 @@ export function RevealGroup({
   stagger?: number;
 }) {
   return (
-    <motion.div
+    <m.div
       className={className}
       initial="hidden"
       whileInView="visible"
@@ -66,14 +66,14 @@ export function RevealGroup({
       variants={{ hidden: {}, visible: { transition: { staggerChildren: stagger } } }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
 export function RevealItem({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <motion.div className={className} variants={groupItem}>
+    <m.div className={className} variants={groupItem}>
       {children}
-    </motion.div>
+    </m.div>
   );
 }

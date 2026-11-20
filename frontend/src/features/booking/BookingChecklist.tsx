@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { m } from "motion/react";
 
 import { STEP_LABELS, type Step } from "./booking-reducer";
 
@@ -25,7 +25,7 @@ export function BookingChecklist({ items }: { items: ChecklistItem[] }) {
               }`}
             >
               <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
-                <motion.path
+                <m.path
                   d="M5 12.5l4.5 4.5L19 7.5"
                   fill="none"
                   stroke="currentColor"
@@ -43,7 +43,7 @@ export function BookingChecklist({ items }: { items: ChecklistItem[] }) {
                 className={`relative inline-block font-semibold ${done ? "text-ink-500" : "text-ink-800"}`}
               >
                 {STEP_LABELS[step]}
-                <motion.span
+                <m.span
                   aria-hidden="true"
                   className="absolute top-1/2 left-0 h-0.5 w-full origin-left rounded bg-ink-400"
                   initial={false}

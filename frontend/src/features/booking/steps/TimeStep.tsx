@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 
 import { Spinner } from "../../../components/ui/Spinner";
 import { api } from "../../../lib/api";
@@ -81,7 +81,7 @@ export function TimeStep({
           </p>
         ) : (
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={selectedDate}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -116,7 +116,7 @@ export function TimeStep({
                   </div>
                 </div>
               ))}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         )}
       </div>

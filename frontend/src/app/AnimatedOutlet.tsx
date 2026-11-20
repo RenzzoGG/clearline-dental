@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useState } from "react";
 import { useLocation, useOutlet } from "react-router";
 
@@ -14,7 +14,7 @@ export function AnimatedOutlet() {
   const { pathname } = useLocation();
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div
+      <m.div
         key={pathname}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -22,7 +22,7 @@ export function AnimatedOutlet() {
         transition={{ duration: 0.2, ease: "easeOut" }}
       >
         <FrozenOutlet />
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   );
 }

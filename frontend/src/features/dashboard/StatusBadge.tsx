@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 
 import type { AppointmentStatus } from "../../lib/types";
 import { STATUS_LABELS, STATUS_STYLES } from "./status";
@@ -8,7 +8,7 @@ export function StatusBadge({ status }: { status: AppointmentStatus }) {
   return (
     <span className="relative inline-grid">
       <AnimatePresence mode="popLayout" initial={false}>
-        <motion.span
+        <m.span
           key={status}
           initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -21,7 +21,7 @@ export function StatusBadge({ status }: { status: AppointmentStatus }) {
             aria-hidden="true"
           />
           {STATUS_LABELS[status]}
-        </motion.span>
+        </m.span>
       </AnimatePresence>
     </span>
   );

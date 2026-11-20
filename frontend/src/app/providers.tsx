@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MotionConfig } from "motion/react";
+import { domAnimation, LazyMotion, MotionConfig } from "motion/react";
 import { useState, type ReactNode } from "react";
 
 import { AuthProvider } from "../features/auth/AuthProvider";
@@ -23,9 +23,15 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {/* "user": honor prefers-reduced-motion everywhere (transforms off, fades kept). */}
-      <MotionConfig reducedMotion="user">
-        <AuthProvider>{children}</AuthProvider>
-      </MotionConfig>
+      {/* LazyMotion + domAnimation: only the animation/gesture/in-view features we use.
+          The full bundle also creates a layout-projection node per element and measures
+          the DOM on every commit (no `layout` animations exist here). strict = using
+          `motion.*` instead of `m.*` throws in development. */}
+      <LazyMotion features={domAnimation} strict>
+        <MotionConfig reducedMotion="user">
+          <AuthProvider>{children}</AuthProvider>
+        </MotionConfig>
+      </LazyMotion>
     </QueryClientProvider>
   );
 }

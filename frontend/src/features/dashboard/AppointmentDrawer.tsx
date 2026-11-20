@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useEffect, useRef } from "react";
 
 import { Alert } from "../../components/ui/Alert";
@@ -55,7 +55,7 @@ function DrawerPanel({ appointment, onClose }: { appointment: Appointment; onClo
 
   return (
     <>
-      <motion.div
+      <m.div
         className="fixed inset-0 z-40 bg-ink-900/30"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -63,7 +63,7 @@ function DrawerPanel({ appointment, onClose }: { appointment: Appointment; onClo
         onClick={onClose}
         aria-hidden="true"
       />
-      <motion.div
+      <m.div
         role="dialog"
         aria-modal="true"
         aria-labelledby="appointment-title"
@@ -147,7 +147,7 @@ function DrawerPanel({ appointment, onClose }: { appointment: Appointment; onClo
             <p className="text-xs text-ink-500">It can be marked completed once it starts.</p>
           )}
         </div>
-      </motion.div>
+      </m.div>
     </>
   );
 }

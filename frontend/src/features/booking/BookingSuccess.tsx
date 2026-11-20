@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { Link } from "react-router";
 
 import { Button, buttonClasses } from "../../components/ui/Button";
@@ -13,7 +13,7 @@ export function BookingSuccess({
   onBookAnother: () => void;
 }) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
@@ -21,7 +21,7 @@ export function BookingSuccess({
       role="status"
     >
       <svg viewBox="0 0 52 52" className="mx-auto size-20" aria-hidden="true">
-        <motion.circle
+        <m.circle
           cx="26"
           cy="26"
           r="24"
@@ -32,7 +32,7 @@ export function BookingSuccess({
           animate={{ pathLength: 1 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         />
-        <motion.path
+        <m.path
           d="M15 27l7 7 15-15"
           fill="none"
           className="stroke-brand-600"
@@ -62,6 +62,6 @@ export function BookingSuccess({
         </Link>
         <Button onClick={onBookAnother}>Book another visit</Button>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

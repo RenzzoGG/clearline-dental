@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { Link } from "react-router";
 
 import { buttonClasses } from "../../components/ui/Button";
@@ -11,13 +11,13 @@ export function Hero() {
   return (
     <section className="relative overflow-hidden bg-mint-50">
       {/* Decorative blobs: transform-only infinite drift (disabled with reduced motion). */}
-      <motion.div
+      <m.div
         aria-hidden="true"
         className="absolute -top-32 -right-24 size-[28rem] rounded-full bg-brand-200/50 blur-3xl"
         animate={{ y: [0, 24, 0], x: [0, -12, 0] }}
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
       />
-      <motion.div
+      <m.div
         aria-hidden="true"
         className="absolute -bottom-40 -left-24 size-[24rem] rounded-full bg-coral-100/70 blur-3xl"
         animate={{ y: [0, -20, 0] }}
@@ -26,18 +26,18 @@ export function Hero() {
 
       <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pt-16 pb-24 sm:px-6 md:pt-24 lg:grid-cols-[1.15fr_1fr]">
         <div>
-          <motion.p
+          <m.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: EASE }}
             className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-100"
           >
             <Icon name="sparkle" className="size-4" /> Now booking same-week visits in Hermosillo
-          </motion.p>
+          </m.p>
 
           <h1 className="mt-6 text-4xl leading-[1.05] font-extrabold tracking-tight text-ink-900 sm:text-6xl">
             {HEADLINE.map((word, index) => (
-              <motion.span
+              <m.span
                 key={index}
                 className="mr-[0.25em] inline-block"
                 initial={{ opacity: 0, y: "0.4em" }}
@@ -45,11 +45,11 @@ export function Hero() {
                 transition={{ duration: 0.6, ease: EASE, delay: 0.1 + index * 0.06 }}
               >
                 {word === "minute." ? <span className="text-brand-600">{word}</span> : word}
-              </motion.span>
+              </m.span>
             ))}
           </h1>
 
-          <motion.p
+          <m.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE, delay: 0.55 }}
@@ -57,9 +57,9 @@ export function Hero() {
           >
             Checkups, whitening, orthodontics and more — with clear prices, real-time availability
             and a team that actually explains what&apos;s going on.
-          </motion.p>
+          </m.p>
 
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE, delay: 0.7 }}
@@ -71,7 +71,7 @@ export function Hero() {
             <a href="#services" className={buttonClasses("secondary", "lg")}>
               See services
             </a>
-          </motion.div>
+          </m.div>
         </div>
 
         <BookingPreview />
@@ -84,7 +84,7 @@ export function Hero() {
 function BookingPreview() {
   const slots = ["9:00 AM", "9:15 AM", "10:30 AM", "11:45 AM", "2:00 PM", "4:15 PM"];
   return (
-    <motion.div
+    <m.div
       aria-hidden="true"
       initial={{ opacity: 0, y: 32, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -103,7 +103,7 @@ function BookingPreview() {
         </div>
         <div className="mt-5 grid grid-cols-3 gap-2">
           {slots.map((slot, index) => (
-            <motion.span
+            <m.span
               key={slot}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -113,12 +113,12 @@ function BookingPreview() {
               }`}
             >
               {slot}
-            </motion.span>
+            </m.span>
           ))}
         </div>
       </div>
 
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: [0, -6, 0] }}
         transition={{
@@ -134,7 +134,7 @@ function BookingPreview() {
           <span className="block text-sm font-bold text-ink-900">Visit confirmed</span>
           <span className="block text-xs text-ink-500">Dr. Ramirez · 10:30 AM</span>
         </span>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

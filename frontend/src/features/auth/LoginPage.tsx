@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router";
@@ -56,7 +56,7 @@ export default function LoginPage() {
 
   return (
     <section className="grid min-h-[calc(100dvh-4.5rem)] place-items-center bg-mint-50 px-4 py-16">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
@@ -94,7 +94,7 @@ export default function LoginPage() {
             Book a visit and create your account
           </Link>
         </p>
-      </motion.div>
+      </m.div>
     </section>
   );
 }

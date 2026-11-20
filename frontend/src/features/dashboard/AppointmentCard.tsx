@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import type { CSSProperties } from "react";
 
 import { formatTime } from "../../lib/time";
@@ -12,7 +12,7 @@ export function StrikeText({ text, struck }: { text: string; struck: boolean }) 
   return (
     <span className="relative inline-block max-w-full truncate align-bottom">
       {text}
-      <motion.span
+      <m.span
         aria-hidden="true"
         className="absolute top-1/2 left-0 h-[1.5px] w-full origin-left bg-current"
         initial={false}

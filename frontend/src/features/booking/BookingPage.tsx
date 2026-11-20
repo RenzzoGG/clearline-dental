@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { Alert } from "../../components/ui/Alert";
@@ -151,7 +151,7 @@ export default function BookingPage() {
               would otherwise widen the column (and the page) instead of scrolling. */}
           <div className="min-w-0">
             <AnimatePresence mode="wait" initial={false}>
-              <motion.div
+              <m.div
                 key={state.step}
                 initial={{ opacity: 0, x: 24 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -226,7 +226,7 @@ export default function BookingPage() {
                     </>
                   )}
                 </div>
-              </motion.div>
+              </m.div>
             </AnimatePresence>
 
             <div className="mt-8 flex items-center justify-between border-t border-ink-100 pt-6">
