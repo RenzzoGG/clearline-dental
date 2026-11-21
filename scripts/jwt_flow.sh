@@ -61,9 +61,15 @@ AUTH=(-H "Authorization: Bearer $access")
 check "login returns tokens" "yes" "$([[ -n "$access" && -n "$refresh" ]] && echo yes || echo no)"
 check "me role" "patient" "$(curl -s "${AUTH[@]}" "$API_URL/auth/me/" | json "d.get('role')")"
 
-# 2. Book the first free slot (sending another patient's id, which must be ignored)
+# 2. Book the first free slot (sending another patient's id, which must be ignored).
+#    Look ahead up to two weeks: a busy calendar can leave the next open day fully booked.
 day=$(next_open_day)
-slot=$(curl -s "$API_URL/availability/?dentist=$DENTIST_ID&service=$SERVICE_ID&date=$day" | json "d['slots'][0]['starts_at'] if d.get('slots') else ''")
+slot=""
+for _ in $(seq 1 14); do
+    slot=$(curl -s "$API_URL/availability/?dentist=$DENTIST_ID&service=$SERVICE_ID&date=$day" | json "d['slots'][0]['starts_at'] if d.get('slots') else ''")
+    [[ -n "$slot" ]] && break
+    day=$(python3 -c "import datetime as d; print(d.date.fromisoformat('$day') + d.timedelta(days=1))")
+done
 check "availability has a slot ($day)" "yes" "$([[ -n "$slot" ]] && echo yes || echo no)"
 
 booking=$(post "${AUTH[@]}" "$API_URL/appointments/" -d "{\"patient\":1,\"dentist\":$DENTIST_ID,\"service\":$SERVICE_ID,\"starts_at\":\"$slot\"}")

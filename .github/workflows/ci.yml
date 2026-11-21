@@ -1,0 +1,127 @@
+# CI (docs/DEPLOY.md §2): lint, tests and build on every push and pull request, then
+# end-to-end smoke tests against the production image. No repository secrets are needed:
+# every key/password used here is generated per run and masked in the logs.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (ruff, pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: clearline_ci
+          POSTGRES_USER: clearline_ci
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U clearline_ci -d clearline_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://clearline_ci:ci-only-password@localhost:5432/clearline_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Throwaway Django secret key
+        run: |
+          key="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')"
+          echo "::add-mask::$key"
+          echo "DJANGO_SECRET_KEY=$key" >> "$GITHUB_ENV"
+      - run: uv sync --frozen
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Tests with coverage (>= 85%)
+        run: uv run pytest --cov=apps --cov=config --cov-report=term --cov-fail-under=85
+
+  frontend:
+    name: Frontend (eslint, typecheck, vitest, build, budgets)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Size budgets
+        run: npm run budgets
+
+  e2e:
+    name: End-to-end (production image + Playwright)
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Throwaway secret key and demo passwords
+        run: |
+          for name in E2E_SECRET_KEY E2E_DEMO_RECEPTIONIST_PASSWORD E2E_DEMO_PATIENT_PASSWORD; do
+            value="$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))')"
+            echo "::add-mask::$value"
+            echo "$name=$value" >> "$GITHUB_ENV"
+          done
+      - name: Start the production image with Postgres
+        run: docker compose -f docker-compose.e2e.yml up --build -d --wait
+      - name: Fresh demo data
+        run: docker compose -f docker-compose.e2e.yml exec -T web python manage.py reset_demo
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Playwright
+        working-directory: frontend
+        run: |
+          npm ci --no-audit
+          npx playwright install --with-deps chromium
+      - name: Smoke tests
+        working-directory: frontend
+        run: npx playwright test
+      - name: Server logs (on failure)
+        if: failure()
+        run: docker compose -f docker-compose.e2e.yml logs --no-color --tail 200
+      - name: Upload Playwright report (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/e2e/test-results
+          retention-days: 7
+      - name: Stop the stack
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml down --volumes
