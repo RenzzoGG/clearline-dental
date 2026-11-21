@@ -33,7 +33,11 @@ test("public site loads with its call to action", async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Gentle dental care");
-  await expect(page.locator("main").getByRole("link", { name: /book a visit/i })).toBeVisible();
+  // Scope to the hero (the section holding the h1): the final "Visit us" section has a
+  // second "Book a visit" link, which exists or not depending on whether the lazy
+  // below-the-fold chunk has rendered yet, so an unscoped locator is timing dependent.
+  const hero = page.locator("section", { has: page.getByRole("heading", { level: 1 }) });
+  await expect(hero.getByRole("link", { name: /book a visit/i })).toBeVisible();
   await page.getByRole("heading", { name: /priced up front/i }).scrollIntoViewIfNeeded();
   await expect(page.locator("[data-service-row]").first()).toBeVisible();
   expect(errors).toEqual([]);
