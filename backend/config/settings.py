@@ -3,6 +3,7 @@
 All environment-specific values come from environment variables (see .env.example).
 """
 
+import re
 from datetime import timedelta
 from pathlib import Path
 
@@ -15,6 +16,13 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     DJANGO_ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
     DJANGO_CORS_ALLOWED_ORIGINS=(list, ["http://localhost:5173"]),
+    DJANGO_CSRF_TRUSTED_ORIGINS=(list, []),
+    # Production behind an HTTPS proxy (Railway): redirects, secure cookies, HSTS.
+    DJANGO_HTTPS=(bool, False),
+    DJANGO_SECURE_HSTS_SECONDS=(int, 0),
+    # Reverse proxies in front of Django, for the client IP used by throttling.
+    DJANGO_NUM_PROXIES=(int, 0),
+    DJANGO_STATIC_MANIFEST=(bool, False),
 )
 
 # --- Core ---------------------------------------------------------------------
@@ -29,6 +37,7 @@ if len(SECRET_KEY) < MIN_SECRET_KEY_LENGTH:
     )
 DEBUG = env("DJANGO_DEBUG")
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
+CSRF_TRUSTED_ORIGINS = env("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -53,6 +62,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Serves static files (admin, DRF) and the built frontend (see WHITENOISE_ROOT).
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     # Must run before CommonMiddleware so CORS headers are added to every response.
     "corsheaders.middleware.CorsMiddleware",
@@ -87,6 +98,18 @@ ASGI_APPLICATION = "config.asgi.application"
 # DATABASE_URL example: postgres://user:password@db:5432/clearline
 
 DATABASES = {"default": env.db("DATABASE_URL")}
+# Reuse connections for a minute (with a liveness check) instead of one per request.
+DATABASES["default"]["CONN_MAX_AGE"] = 60
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+
+# Shared cache in Postgres (no Redis needed): backs DRF throttling across gunicorn workers.
+# The table is created by a migration (apps/core), so `migrate` is all a deploy needs.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache",
+    }
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -114,6 +137,38 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Hashed + compressed static files in the production image (its Dockerfile sets
+# DJANGO_STATIC_MANIFEST for collectstatic and at runtime). Tests and local development keep
+# the plain storage, which needs no collectstatic.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if env("DJANGO_STATIC_MANIFEST")
+            else "django.contrib.staticfiles.storage.StaticFilesStorage"
+        )
+    },
+}
+
+# The built frontend (Vite `dist/`), copied into the production image. WhiteNoise serves its
+# files from the site root (/assets/*, /img/*, /robots.txt...) and config.spa.index serves
+# index.html for the app's routes. Absent in local development (Vite serves the frontend).
+FRONTEND_DIST = BASE_DIR / "frontend_dist"
+if FRONTEND_DIST.is_dir():
+    WHITENOISE_ROOT = FRONTEND_DIST
+
+
+_DJANGO_HASHED_STATIC = re.compile(r"^/static/.+\.[0-9a-f]{12}\.\w+$")
+
+
+def _immutable_file(path, url):
+    """Content-hashed files never change, so browsers may cache them for a year: Vite's
+    /assets/ and the hashed names collectstatic writes under /static/ (admin, DRF)."""
+    return url.startswith("/assets/") or bool(_DJANGO_HASHED_STATIC.match(url))
+
+
+WHITENOISE_IMMUTABLE_FILE_TEST = _immutable_file
 
 # --- REST API -----------------------------------------------------------------
 
@@ -133,6 +188,16 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "apps.core.exceptions.api_exception_handler",
+    # Opt-in per view with throttle_scope (see apps.core.throttling). Anonymous requests are
+    # counted per client IP, authenticated ones per user.
+    "DEFAULT_THROTTLE_RATES": {
+        "auth_login": "10/min",
+        "auth_register": "5/hour",
+        "auth_refresh": "30/min",
+        "booking": "20/hour",
+        "availability": "120/min",
+    },
+    "NUM_PROXIES": env("DJANGO_NUM_PROXIES"),
 }
 
 SPECTACULAR_SETTINGS = {
@@ -158,3 +223,32 @@ SIMPLE_JWT = {
 # --- CORS ---------------------------------------------------------------------
 
 CORS_ALLOWED_ORIGINS = env("DJANGO_CORS_ALLOWED_ORIGINS")
+
+# --- Security -----------------------------------------------------------------------------
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+
+if env("DJANGO_HTTPS"):
+    # TLS ends at the platform's proxy, which reports the original scheme in this header.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    # The platform's healthcheck calls the container over plain HTTP: never redirect it.
+    SECURE_REDIRECT_EXEMPT = [r"^api/health/$"]
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Start low and raise once everything works. No includeSubDomains: other subdomains of
+    # the parent domain are not part of this project.
+    SECURE_HSTS_SECONDS = env("DJANGO_SECURE_HSTS_SECONDS")
+    # Deliberate (docs/DEPLOY.md §3): the parent domain has other subdomains that are not
+    # part of this project, so HSTS must not cover them nor be submitted for preload.
+    SILENCED_SYSTEM_CHECKS = ["security.W005", "security.W021"]
+
+# --- Logging: everything to stdout (the platform collects it) -----------------------------
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {"django.request": {"level": "WARNING"}},
+}

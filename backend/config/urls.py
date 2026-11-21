@@ -1,12 +1,18 @@
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from apps.core.views import health
 
+from . import spa
+
 admin.site.site_header = "Clearline Dental"
 admin.site.site_title = "Clearline Dental admin"
 admin.site.index_title = "Clinic administration"
+
+# Anything not under the API/admin/static/asset prefixes and not file-like ("x.ico", also
+# with a trailing slash, which APPEND_SLASH would otherwise try and redirect to).
+SPA_ROUTE = r"^(?!(?:api|admin|static|assets|img)(?:/|$))(?!.*\.[A-Za-z0-9]+/?$).*$"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -16,4 +22,8 @@ urlpatterns = [
     path("api/auth/", include("apps.accounts.urls")),
     path("api/", include("apps.clinic.urls")),
     path("api/", include("apps.appointments.urls")),
+    # Frontend routes -> index.html (production build only). Excludes the API, admin, static
+    # files, the build's own asset folders and anything that looks like a file, so a missing
+    # asset or endpoint stays a real 404 instead of returning the app.
+    re_path(SPA_ROUTE, spa.index, name="spa"),
 ]

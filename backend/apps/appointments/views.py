@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import IsClinicStaff, IsClinicStaffOrPatient
@@ -51,6 +52,14 @@ class AppointmentViewSet(
         if self.action in self.PATIENT_ACTIONS:
             return [IsClinicStaffOrPatient()]
         return [IsClinicStaff()]
+
+    def get_throttles(self):
+        # Patients booking online are rate limited; the front desk is not.
+        user = self.request.user
+        if self.action == "create" and not (user.is_authenticated and user.is_clinic_staff):
+            self.throttle_scope = "booking"
+            return [ScopedRateThrottle()]
+        return super().get_throttles()
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -115,6 +124,8 @@ class AvailabilityView(APIView):
     """Free start times for a dentist and service on a given date (clinic local time)."""
 
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "availability"
 
     @extend_schema(parameters=[AvailabilityQuerySerializer], responses=AvailabilitySerializer)
     def get(self, request):

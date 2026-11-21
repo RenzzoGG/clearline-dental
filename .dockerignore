@@ -1,0 +1,24 @@
+# Build context of the production Dockerfile (repo root). Keep secrets, git history and
+# local artifacts out of the image.
+.env
+.env.*
+.git
+.github
+.cache
+**/.cache
+docs
+scripts
+**/node_modules
+frontend/dist
+frontend/coverage
+frontend/e2e/test-results
+frontend/playwright-report
+backend/.venv
+backend/staticfiles
+backend/frontend_dist
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+backend/.coverage
+backend/htmlcov
