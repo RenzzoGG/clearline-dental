@@ -22,6 +22,14 @@ def test_health_returns_503_when_database_fails(client):
     assert response.json()["database"] == "unavailable"
 
 
+@pytest.mark.django_db
+def test_health_answers_head(client):
+    # Uptime monitors often probe with HEAD; it must not be a 405.
+    response = client.head(reverse("health"))
+
+    assert response.status_code == 200
+
+
 def test_health_rejects_post(client):
     response = client.post(reverse("health"))
 

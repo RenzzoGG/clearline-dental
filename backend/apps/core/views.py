@@ -1,9 +1,9 @@
 from django.db import DatabaseError, connection
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_safe
 
 
-@require_GET
+@require_safe
 def health(request: HttpRequest) -> JsonResponse:
     """Liveness + database check used by Docker healthchecks and the deploy platform."""
     try:

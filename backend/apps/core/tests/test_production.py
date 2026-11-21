@@ -93,6 +93,17 @@ def test_app_routes_serve_index_html(client, frontend_build, path):
     assert response["Cache-Control"] == "no-cache"
 
 
+@pytest.mark.parametrize("path", ["/", "/book"])
+def test_app_routes_answer_head(client, frontend_build, path):
+    response = client.head(path)
+    assert response.status_code == 200
+    assert response["Cache-Control"] == "no-cache"
+
+
+def test_app_routes_reject_post(client, frontend_build):
+    assert client.post("/book").status_code == 405
+
+
 @pytest.mark.parametrize(
     "path",
     [

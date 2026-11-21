@@ -10,7 +10,7 @@ from functools import cache
 
 from django.conf import settings
 from django.http import Http404, HttpRequest, HttpResponse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_safe
 
 
 @cache
@@ -19,7 +19,7 @@ def _index_html() -> bytes | None:
     return index.read_bytes() if index.is_file() else None
 
 
-@require_GET
+@require_safe
 def index(request: HttpRequest) -> HttpResponse:
     html = _index_html()
     if html is None:
