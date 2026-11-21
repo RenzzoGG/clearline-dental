@@ -1,7 +1,7 @@
 # Clearline Dental — CI, endurecimiento y deploy (Fase 6)
 
-> Estado: **aprobado** (con App Sleeping encendido; ver sección 7). Implementación en las sub-fases
-> 6.1–6.5.
+> Estado: **aprobado e implementado** (6.1–6.4; App Sleeping encendido, ver sección 7). Falta 6.5:
+> el deploy real (pasos manuales de la sección 6) y Lighthouse contra la URL de producción.
 >
 > Reglas: Renzzo configura todos los secretos y los ajustes de Railway / Cloudflare / GitHub.
 > Este documento solo nombra variables (nunca valores). Solo commits locales; nunca `git push`.
@@ -144,7 +144,7 @@ Respuesta al exceder: `429` con `Retry-After`. Detrás del proxy de Railway, la 
 |--------|-------|
 | Source → Root Directory | *(vacío = raíz del repo)* |
 | Build → Builder | Dockerfile (se detecta solo con `Dockerfile` en la raíz) |
-| Deploy → Pre-deploy Command | `python manage.py migrate --noinput && python manage.py createcachetable` |
+| Deploy → Pre-deploy Command | `python manage.py migrate --noinput` (también crea la tabla de caché del throttling) |
 | Deploy → Custom Start Command | *(vacío: usa el `CMD` del Dockerfile = gunicorn)* |
 | Deploy → Healthcheck Path | `/api/health/` |
 | Deploy → Healthcheck Timeout | `120` segundos |
@@ -163,12 +163,31 @@ Respuesta al exceder: `429` con `Retry-After`. Detrás del proxy de Railway, la 
 | Deploy → Healthcheck | *(sin healthcheck: es un job que termina)* |
 | Networking | Sin dominio público |
 
-### Variables de entorno (**solo nombres**; tú pones los valores)
+### Variables de entorno
 
-Servicio `web` y `demo-reset` (las mismas en ambos; Railway permite "Shared Variables"):
+Las dos primeras son **secretos**: los generas tú y nunca van al repo ni al chat. El resto no son
+secretos; te indico el valor sugerido. Mismas variables en `web` y `demo-reset` (usa *Shared
+Variables* del proyecto).
 
-| Variable | Para qué |
-|----------|----------|
+| Variable | Tipo | Valor sugerido / para qué |
+|----------|------|---------------------------|
+| `DJANGO_SECRET_KEY` | **Secreto** | ≥ 50 caracteres aleatorios (también firma los JWT) |
+| `DEMO_RECEPTIONIST_PASSWORD` | Público por diseño | Contraseña de `demo-reception`; se muestra en el login |
+| `DEMO_PATIENT_PASSWORD` | Público por diseño | Contraseña del paciente demo; se muestra en el login |
+| `DATABASE_URL` | Referencia | `${{Postgres.DATABASE_URL}}` (red privada de Railway) |
+| `DJANGO_ALLOWED_HOSTS` | Config | `clearline.renzzogg.com,<tu-servicio>.up.railway.app,healthcheck.railway.app` |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | Config | `https://clearline.renzzogg.com,https://<tu-servicio>.up.railway.app` |
+| `DJANGO_HTTPS` | Config | `true` (redirección a HTTPS, cookies seguras, HSTS) |
+| `DJANGO_SECURE_HSTS_SECONDS` | Config | `3600` al principio; `31536000` cuando todo funcione |
+| `DJANGO_NUM_PROXIES` | Config | `1` (el proxy de Railway; da la IP real para el throttling) |
+| `WEB_CONCURRENCY` | Config | `2` (o `1` para ahorrar RAM) |
+| `DEMO_MODE` | Config | `true` |
+
+`PORT` lo pone Railway solo. `healthcheck.railway.app` debe estar en `DJANGO_ALLOWED_HOSTS`: es el
+`Host` con el que llega el healthcheck de Railway. `.env.example` tiene todos los nombres con
+placeholders.
+
+----------|----------|
 | `DJANGO_SECRET_KEY` | Llave de Django y de los JWT (≥ 50 caracteres, generada por ti) |
 | `DATABASE_URL` | Referencia al Postgres: `${{Postgres.DATABASE_URL}}` |
 | `DJANGO_ALLOWED_HOSTS` | Tu dominio + el dominio `*.up.railway.app` del servicio |
@@ -265,8 +284,8 @@ durante ~10 minutos, Railway lo duerme y deja de cobrar su CPU/RAM. La siguiente
 **Arranque en frío (cold start) — qué implica y cómo queda cubierto:**
 - La primera visita después de dormir espera a que arranque el contenedor (Django + gunicorn):
   típicamente **unos segundos**. Las siguientes son normales. Se mide en la sub-fase 6.5.
-- **Nada pesado al arrancar:** las migraciones y `createcachetable` corren en el *Pre-deploy
-  Command* (una vez por deploy), no al despertar. El `CMD` de la imagen solo lanza gunicorn.
+- **Nada pesado al arrancar:** las migraciones (incluida la tabla de caché) corren en el
+  *Pre-deploy Command* (una vez por deploy), no al despertar. El `CMD` de la imagen solo lanza gunicorn.
 - **El healthcheck** de Railway solo se usa al desplegar; despertar no lo vuelve a correr.
 - **Los datos demo no dependen de `web`:** viven en Postgres (siempre encendido) y los rehace el cron
   `demo-reset`, que corre aunque `web` esté dormido.
@@ -290,3 +309,24 @@ Cada una: construir → verificar yo mismo → commit(s) locales.
 | **6.3 CI + E2E** | `ci.yml`, `docker-compose.e2e.yml`, 3 pruebas Playwright, cobertura ≥ 85 % | Corro los mismos comandos localmente (incluida la imagen de producción) |
 | **6.4 Docs** | `.env.example`, este documento con lo final, README de despliegue | — |
 | **6.5 Post-deploy** | Lighthouse y revisión de headers contra `clearline.renzzogg.com` | Cuando me avises que el deploy está arriba |
+
+---
+
+## 9. Verificación local (antes de desplegar)
+
+La imagen de producción se puede probar igual que en CI:
+
+```bash
+# Variables desechables solo para esta prueba (no son las de Railway):
+export E2E_SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))')"
+export E2E_DEMO_RECEPTIONIST_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(16))')"
+export E2E_DEMO_PATIENT_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(16))')"
+docker compose -f docker-compose.e2e.yml up --build -d --wait
+docker compose -f docker-compose.e2e.yml exec web python manage.py reset_demo
+# Sitio completo en http://localhost:8088 ; E2E: cd frontend && npx playwright test
+```
+
+Verificado en la fase 6 con esa imagen: rutas de la SPA, 404 reales para API/assets faltantes,
+assets con gzip y caché `immutable`, admin con estáticos con hash, redirección a HTTPS salvo el
+healthcheck, HSTS, cookies `Secure`, host desconocido → 400, throttling por IP real,
+`check --deploy` limpio, modo demo de punta a punta y los 3 E2E.
