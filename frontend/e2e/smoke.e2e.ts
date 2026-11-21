@@ -4,7 +4,8 @@ import { expect, test, type Page } from "@playwright/test";
  * Smoke tests (docs/DEPLOY.md §2), run in order against the production image:
  * 1. the public site loads;
  * 2. a new patient books an appointment end to end;
- * 3. the front desk (demo account) confirms that appointment in the dashboard.
+ * 3. the front desk (demo account) confirms that appointment in the dashboard;
+ * 4. the demo patient signs in, is kept out of the dashboard and books as themselves.
  * Requires demo mode and `manage.py reset_demo` (fresh data, demo accounts).
  */
 test.describe.configure({ mode: "serial" });
@@ -43,19 +44,15 @@ test("public site loads with its call to action", async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test("a new patient books an appointment end to end", async ({ page }) => {
-  const errors = collectErrors(page);
+/** Booking steps 1-3: the first service and dentist, then the first day with a free slot. */
+async function pickServiceDentistAndSlot(page: Page) {
   await page.goto("/book");
-  const next = () => page.getByRole("button", { name: /^continue/i }).click();
-
-  // 1-2. First service and first dentist.
   await page.locator("main button[aria-pressed]").first().click();
-  await next();
+  await continueStep(page);
   await page.getByRole("heading", { name: "Dentist", exact: true }).waitFor();
   await page.locator("main button[aria-pressed]").first().click();
-  await next();
+  await continueStep(page);
 
-  // 3. The first day with a free slot, then its first slot.
   const days = page.getByRole("group", { name: "Choose a day" }).getByRole("button");
   await days.first().waitFor();
   const slots = page.locator("div.min-h-40 button[aria-pressed]");
@@ -65,7 +62,27 @@ test("a new patient books an appointment end to end", async ({ page }) => {
     if (await slots.count()) break;
   }
   await slots.first().click();
-  await next();
+  await continueStep(page);
+}
+
+function continueStep(page: Page) {
+  return page.getByRole("button", { name: /^continue/i }).click();
+}
+
+/** Signs in with one of the login page's demo accounts ("Front desk" or "Patient"). */
+async function signInAsDemo(page: Page, label: "Front desk" | "Patient") {
+  await page.goto("/login");
+  await page
+    .getByRole("region", { name: "Try the demo" })
+    .locator("li", { hasText: label })
+    .getByRole("button", { name: "Use this account" })
+    .click();
+  await page.locator("form").getByRole("button", { name: "Sign in" }).click();
+}
+
+test("a new patient books an appointment end to end", async ({ page }) => {
+  const errors = collectErrors(page);
+  await pickServiceDentistAndSlot(page);
 
   // 4. Sign up as a new patient.
   await page.getByLabel("First name").fill(patient.firstName);
@@ -88,15 +105,7 @@ test("a new patient books an appointment end to end", async ({ page }) => {
 
 test("the front desk confirms that appointment in the dashboard", async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto("/login");
-
-  // Demo front desk account, straight from the login page's demo card.
-  const demo = page.getByRole("region", { name: "Try the demo" });
-  await demo
-    .locator("li", { hasText: "Front desk" })
-    .getByRole("button", { name: "Use this account" })
-    .click();
-  await page.locator("form").getByRole("button", { name: "Sign in" }).click();
+  await signInAsDemo(page, "Front desk");
   await expect(page.getByRole("heading", { name: "Schedule" })).toBeVisible();
 
   // Day view of the booked date: step forward until its title matches (within two weeks).
@@ -123,5 +132,21 @@ test("the front desk confirms that appointment in the dashboard", async ({ page 
   await expect(
     page.getByRole("button", { name: new RegExp(`${patient.lastName}.*Confirmed`) }),
   ).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("the demo patient signs in and books as themselves", async ({ page }) => {
+  const errors = collectErrors(page);
+  await signInAsDemo(page, "Patient");
+  // Patients land on the public site, and the dashboard sends them back to the login.
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/login\?next=%2Fdashboard$/);
+
+  await pickServiceDentistAndSlot(page);
+  await expect(page.getByText(/^Booking as /)).toBeVisible();
+  await continueStep(page);
+  await page.getByRole("button", { name: "Confirm booking" }).click();
+  await expect(page.getByRole("heading", { name: "You're booked!" })).toBeVisible();
   expect(errors).toEqual([]);
 });
