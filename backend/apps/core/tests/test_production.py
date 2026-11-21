@@ -73,6 +73,30 @@ def test_limits_are_per_client_ip(tight_rates, settings):
     assert second.post(TOKEN, {"username": "x", "password": "y"}).status_code == 401
 
 
+def test_client_ip_header_identifies_clients_behind_the_platform_proxy(tight_rates, settings):
+    # Railway: X-Forwarded-For ends in an edge hop that changes per request, X-Real-IP is the
+    # client. Same client through different hops -> one counter; another client -> its own.
+    settings.CLIENT_IP_HEADER = "X-Real-IP"
+    settings.REST_FRAMEWORK = {**settings.REST_FRAMEWORK, "NUM_PROXIES": 1}
+    credentials = {"username": "x", "password": "y"}
+
+    def attempt(client_ip, hop):
+        headers = {"HTTP_X_REAL_IP": client_ip, "HTTP_X_FORWARDED_FOR": f"{client_ip}, {hop}"}
+        return APIClient().post(TOKEN, credentials, **headers).status_code
+
+    assert [attempt("198.51.100.7", f"10.1.0.{hop}") for hop in range(3)] == [401, 401, 429]
+    assert attempt("198.51.100.8", "10.1.0.9") == 401
+
+
+def test_without_client_ip_header_x_real_ip_is_ignored(tight_rates):
+    # Locally nothing overwrites X-Real-IP, so a client must not be able to pick its identity.
+    statuses = [
+        APIClient().post(TOKEN, {"username": "x", "password": "y"}, HTTP_X_REAL_IP=f"203.0.113.{i}")
+        for i in range(3)
+    ]
+    assert [r.status_code for r in statuses] == [401, 401, 429]
+
+
 # --- single-page app ----------------------------------------------------------------------
 
 

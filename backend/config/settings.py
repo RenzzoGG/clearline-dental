@@ -22,6 +22,9 @@ env = environ.Env(
     DJANGO_SECURE_HSTS_SECONDS=(int, 0),
     # Reverse proxies in front of Django, for the client IP used by throttling.
     DJANGO_NUM_PROXIES=(int, 0),
+    # Header a trusted proxy overwrites with the client IP (Railway: X-Real-IP). Takes
+    # precedence over NUM_PROXIES for throttling; leave empty when nothing overwrites it.
+    DJANGO_CLIENT_IP_HEADER=(str, ""),
     DJANGO_STATIC_MANIFEST=(bool, False),
     # Public demo (apps/accounts/demo.py): accounts shown on the login page, reset nightly.
     DEMO_MODE=(bool, False),
@@ -196,8 +199,8 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "apps.core.exceptions.api_exception_handler",
-    # Opt-in per view with throttle_scope (see apps.core.throttling). Anonymous requests are
-    # counted per client IP, authenticated ones per user.
+    # Opt-in per view with throttle_scope and apps.core.throttling.ClientIPScopedRateThrottle.
+    # Anonymous requests are counted per client IP, authenticated ones per user.
     "DEFAULT_THROTTLE_RATES": {
         "auth_login": "10/min",
         "auth_register": "5/hour",
@@ -207,6 +210,7 @@ REST_FRAMEWORK = {
     },
     "NUM_PROXIES": env("DJANGO_NUM_PROXIES"),
 }
+CLIENT_IP_HEADER = env("DJANGO_CLIENT_IP_HEADER")
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Clearline Dental API",

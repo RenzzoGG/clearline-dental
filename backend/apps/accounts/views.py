@@ -3,8 +3,9 @@ from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from apps.core.throttling import ClientIPScopedRateThrottle
 
 from .demo import demo_accounts
 from .serializers import MeSerializer, RegisterSerializer
@@ -17,19 +18,19 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
     authentication_classes = []  # public endpoint: no session/CSRF involved
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [ClientIPScopedRateThrottle]
     throttle_scope = "auth_register"
 
 
 class ThrottledTokenObtainPairView(TokenObtainPairView):
     """Login (JWT pair), rate limited per client IP against password guessing."""
 
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [ClientIPScopedRateThrottle]
     throttle_scope = "auth_login"
 
 
 class ThrottledTokenRefreshView(TokenRefreshView):
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [ClientIPScopedRateThrottle]
     throttle_scope = "auth_refresh"
 
 
