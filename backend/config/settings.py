@@ -23,6 +23,10 @@ env = environ.Env(
     # Reverse proxies in front of Django, for the client IP used by throttling.
     DJANGO_NUM_PROXIES=(int, 0),
     DJANGO_STATIC_MANIFEST=(bool, False),
+    # Public demo (apps/accounts/demo.py): accounts shown on the login page, reset nightly.
+    DEMO_MODE=(bool, False),
+    DEMO_RECEPTIONIST_PASSWORD=(str, ""),
+    DEMO_PATIENT_PASSWORD=(str, ""),
 )
 
 # --- Core ---------------------------------------------------------------------
@@ -38,6 +42,10 @@ if len(SECRET_KEY) < MIN_SECRET_KEY_LENGTH:
 DEBUG = env("DJANGO_DEBUG")
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env("DJANGO_CSRF_TRUSTED_ORIGINS")
+
+DEMO_MODE = env("DEMO_MODE")
+DEMO_RECEPTIONIST_PASSWORD = env("DEMO_RECEPTIONIST_PASSWORD")
+DEMO_PATIENT_PASSWORD = env("DEMO_PATIENT_PASSWORD")
 
 INSTALLED_APPS = [
     "django.contrib.admin",

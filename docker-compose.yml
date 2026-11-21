@@ -25,6 +25,10 @@ services:
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
       DJANGO_CORS_ALLOWED_ORIGINS: ${DJANGO_CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      # Public demo mode (off unless set in .env; see docs/DEPLOY.md §5).
+      DEMO_MODE: ${DEMO_MODE:-False}
+      DEMO_RECEPTIONIST_PASSWORD: ${DEMO_RECEPTIONIST_PASSWORD:-}
+      DEMO_PATIENT_PASSWORD: ${DEMO_PATIENT_PASSWORD:-}
     ports:
       - "8000:8000"
     volumes:

@@ -66,6 +66,14 @@ export interface Me {
   patient: number | null;
 }
 
+/** Public demo account (GET /api/demo/, only in demo mode). */
+export interface DemoAccount {
+  role: "receptionist" | "patient";
+  label: string;
+  username: string;
+  password: string;
+}
+
 export interface TokenPair {
   access: string;
   refresh: string;

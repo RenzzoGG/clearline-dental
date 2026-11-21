@@ -1,9 +1,12 @@
-from drf_spectacular.utils import extend_schema
-from rest_framework import generics
+from django.http import Http404
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import generics, serializers
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from .demo import demo_accounts
 from .serializers import MeSerializer, RegisterSerializer
 
 
@@ -38,3 +41,34 @@ class MeView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+@extend_schema(
+    responses=inline_serializer(
+        "DemoAccounts",
+        {
+            "accounts": serializers.ListField(
+                child=inline_serializer(
+                    "DemoAccount",
+                    {
+                        "role": serializers.CharField(),
+                        "label": serializers.CharField(),
+                        "username": serializers.CharField(),
+                        "password": serializers.CharField(),
+                    },
+                )
+            )
+        },
+    )
+)
+class DemoAccountsView(generics.GenericAPIView):
+    """Public demo credentials for the login page. 404 unless demo mode is on."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        accounts = demo_accounts()
+        if not accounts:
+            raise Http404
+        return Response({"accounts": [account.__dict__ for account in accounts]})

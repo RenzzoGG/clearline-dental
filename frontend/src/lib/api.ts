@@ -3,6 +3,7 @@ import { tokens } from "./tokens";
 import type {
   Appointment,
   Availability,
+  DemoAccount,
   Dentist,
   Me,
   Paginated,
@@ -169,6 +170,7 @@ export const api = {
     phone: string;
   }) => request<Me>("/auth/register/", { method: "POST", body: data, auth: false }),
   me: () => request<Me>("/auth/me/"),
+  demoAccounts: () => request<{ accounts: DemoAccount[] }>("/demo/", { auth: false }),
 
   createAppointment: (data: { dentist: number; service: number; starts_at: string }) =>
     request<Appointment>("/appointments/", { method: "POST", body: data }),

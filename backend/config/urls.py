@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from apps.accounts.views import DemoAccountsView
 from apps.core.views import health
 
 from . import spa
@@ -20,6 +21,7 @@ urlpatterns = [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),
     path("api/auth/", include("apps.accounts.urls")),
+    path("api/demo/", DemoAccountsView.as_view(), name="demo"),
     path("api/", include("apps.clinic.urls")),
     path("api/", include("apps.appointments.urls")),
     # Frontend routes -> index.html (production build only). Excludes the API, admin, static

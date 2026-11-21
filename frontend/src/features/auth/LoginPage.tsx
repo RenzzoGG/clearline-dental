@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import type { CSSProperties } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -10,9 +11,10 @@ import { Button } from "../../components/ui/Button";
 import { Field } from "../../components/ui/Field";
 import { ToothMark } from "../../components/ui/Logo";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
-import { ApiError } from "../../lib/api";
-import { isStaff } from "../../lib/types";
+import { api, ApiError } from "../../lib/api";
+import { isStaff, type DemoAccount } from "../../lib/types";
 import { useAuth } from "./auth-context";
+import { DemoAccounts } from "./DemoAccounts";
 
 // zod/mini: same validation as classic Zod, but as tree-shakable functions (.check(...))
 // instead of methods, which keeps the form chunk on /book and /login much smaller.
@@ -37,8 +39,20 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ resolver: zodResolver(schema) });
+  // Demo mode only: the server answers 404 otherwise and the card stays hidden.
+  const demo = useQuery({
+    queryKey: ["demo-accounts"],
+    queryFn: api.demoAccounts,
+    retry: false,
+    staleTime: Infinity,
+  });
+  const pickDemo = (account: DemoAccount) => {
+    setValue("username", account.username, { shouldValidate: true });
+    setValue("password", account.password, { shouldValidate: true });
+  };
 
   if (user) return <Navigate to={next ?? (isStaff(user) ? "/dashboard" : "/")} replace />;
 
@@ -57,7 +71,9 @@ export default function LoginPage() {
   });
 
   return (
-    <section className="grid min-h-[calc(100dvh-4.5rem)] place-items-center bg-mint-50 px-4 py-16">
+    // Top-aligned rather than centered: the demo card arrives after its request, and
+    // appending it at the end must not move what is already on screen (layout shift).
+    <section className="grid min-h-[calc(100dvh-4.5rem)] content-start justify-items-center bg-mint-50 px-4 py-16">
       {/* CSS entrance that only slides (no fade): the card holds the LCP heading, and
           opacity 0 would delay LCP. No Motion on this route keeps its JS small. */}
       <div
@@ -98,6 +114,10 @@ export default function LoginPage() {
             Book a visit and create your account
           </Link>
         </p>
+
+        {demo.data && demo.data.accounts.length > 0 && (
+          <DemoAccounts accounts={demo.data.accounts} onPick={pickDemo} />
+        )}
       </div>
     </section>
   );
