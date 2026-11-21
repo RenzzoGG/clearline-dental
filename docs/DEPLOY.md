@@ -1,7 +1,7 @@
 # Clearline Dental — CI, endurecimiento y deploy (Fase 6)
 
-> Estado: **aprobado e implementado** (6.1–6.4; App Sleeping encendido, ver sección 7). Falta 6.5:
-> el deploy real (pasos manuales de la sección 6) y Lighthouse contra la URL de producción.
+> Estado: **desplegado** en `clearline.renzzogg.com` (6.1–6.5; App Sleeping encendido, ver sección 7).
+> Resultados de la revisión post-deploy y pendientes de configuración: **sección 10**.
 >
 > Reglas: Renzzo configura todos los secretos y los ajustes de Railway / Cloudflare / GitHub.
 > Este documento solo nombra variables (nunca valores). Solo commits locales; nunca `git push`.
@@ -72,12 +72,17 @@ el `DJANGO_SECRET_KEY` de CI se genera al vuelo en el propio job (es desechable)
 | **frontend** | `npm ci` · `eslint` · `tsc -b` · `vitest` · `npm run build` · `npm run budgets` | `actions/setup-node` (Node 22, caché de npm). Si un presupuesto se rompe, el job falla. |
 | **e2e** | Build de la imagen de producción + Postgres con `docker compose -f docker-compose.e2e.yml` · `seed` + `reset_demo` · Playwright (Chromium) | Corre después de que `backend` y `frontend` pasan. Prueba la **misma imagen** que irá a Railway. |
 
-**Pruebas E2E (Playwright, `frontend/e2e/`)** — 3 pruebas de humo:
+**Pruebas E2E (Playwright, `frontend/e2e/`)** — 4 pruebas de humo:
 1. **Sitio público:** `/` carga, el CTA "Book a visit" es visible, sin errores de consola.
 2. **Reserva de punta a punta:** un paciente nuevo elige servicio → dentista → horario → se registra →
    confirma → ve "You're booked!".
 3. **Recepción confirma:** login con la cuenta demo de recepción → encuentra esa cita en el dashboard →
    la confirma → el estado cambia a "Confirmed".
+4. **Paciente demo:** login con la cuenta demo de paciente → cae en `/` (no en el dashboard; `/dashboard`
+   lo regresa al login) → reserva como sí mismo ("Booking as …") → ve "You're booked!".
+
+Contra producción (no es parte de CI): `E2E_BASE_URL=https://clearline.renzzogg.com npx playwright test`.
+Crea citas de prueba reales en la demo; el `demo-reset` nocturno las borra.
 
 Las contraseñas demo de CI también se generan al vuelo dentro del job (no son secretos del repo).
 Si un E2E falla, el job sube el reporte HTML y las capturas como *artifact*.
@@ -179,26 +184,14 @@ Variables* del proyecto).
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | Config | `https://clearline.renzzogg.com,https://<tu-servicio>.up.railway.app` |
 | `DJANGO_HTTPS` | Config | `true` (redirección a HTTPS, cookies seguras, HSTS) |
 | `DJANGO_SECURE_HSTS_SECONDS` | Config | `3600` al principio; `31536000` cuando todo funcione |
-| `DJANGO_NUM_PROXIES` | Config | `1` (el proxy de Railway; da la IP real para el throttling) |
+| `DJANGO_NUM_PROXIES` | Config | `1` (respaldo si falta el header de abajo) |
+| `DJANGO_CLIENT_IP_HEADER` | Config | `X-Real-IP` (el edge de Railway lo sobrescribe con la IP real; es la que usa el throttling, ver sección 10) |
 | `WEB_CONCURRENCY` | Config | `2` (o `1` para ahorrar RAM) |
 | `DEMO_MODE` | Config | `true` |
 
 `PORT` lo pone Railway solo. `healthcheck.railway.app` debe estar en `DJANGO_ALLOWED_HOSTS`: es el
 `Host` con el que llega el healthcheck de Railway. `.env.example` tiene todos los nombres con
 placeholders.
-
-----------|----------|
-| `DJANGO_SECRET_KEY` | Llave de Django y de los JWT (≥ 50 caracteres, generada por ti) |
-| `DATABASE_URL` | Referencia al Postgres: `${{Postgres.DATABASE_URL}}` |
-| `DJANGO_ALLOWED_HOSTS` | Tu dominio + el dominio `*.up.railway.app` del servicio |
-| `DJANGO_CSRF_TRUSTED_ORIGINS` | `https://` + tu dominio (para el admin) |
-| `DJANGO_SECURE_HSTS_SECONDS` | Duración de HSTS (empieza bajo, sube después) |
-| `WEB_CONCURRENCY` | Workers de gunicorn (2) |
-| `DEMO_MODE` | Activa el modo demo (`true`) |
-| `DEMO_RECEPTIONIST_PASSWORD` | Contraseña de la cuenta demo de recepción (se mostrará en el login) |
-| `DEMO_PATIENT_PASSWORD` | Contraseña de la cuenta demo de paciente (se mostrará en el login) |
-
-`PORT` lo pone Railway solo. `.env.example` se actualizará con estos nombres y placeholders.
 
 ---
 
@@ -241,7 +234,7 @@ Todo en una transacción: si algo falla, la base queda como estaba. Corre como s
 3. En `web` → *Variables*: crea las variables de la sección 4 (genera tú `DJANGO_SECRET_KEY` y las
    contraseñas demo). Para `DATABASE_URL` usa la referencia `${{Postgres.DATABASE_URL}}`.
 4. En `web` → *Settings*: pon los ajustes de la tabla de la sección 4 (pre-deploy, healthcheck,
-   restart policy, App Sleeping apagado).
+   restart policy, App Sleeping encendido).
 5. *Networking → Generate Domain* (para probar con `*.up.railway.app`) y luego
    *Custom Domain → `clearline.renzzogg.com`*. Railway te mostrará el registro CNAME a crear.
 6. Despliega y revisa en *Deployments* que el healthcheck pase.
@@ -255,6 +248,9 @@ Todo en una transacción: si algo falla, la base queda como estaba. Corre como s
 1. *DNS → Add record*: tipo **CNAME**, nombre `clearline`, destino = el que te dio Railway.
 2. Proxy status: **DNS only (nube gris)**. Railway emite y renueva el certificado TLS; con el proxy
    naranja hay que ajustar SSL a "Full" y depurar cachés dobles — no vale la pena para esta demo.
+   ⚠️ En 6.5 el registro estaba en **naranja (proxied)**: Cloudflare inyecta su script de detección de
+   bots en cada página (−10 a −17 puntos de Lighthouse móvil) y rompe el conteo del throttling por IP.
+   Ver sección 10.
 3. Espera a que Railway marque el dominio como verificado.
 
 **D. Avísame** cuando el dominio responda: corro Lighthouse contra la URL real (`/`, `/book`,
@@ -283,7 +279,7 @@ durante ~10 minutos, Railway lo duerme y deja de cobrar su CPU/RAM. La siguiente
 
 **Arranque en frío (cold start) — qué implica y cómo queda cubierto:**
 - La primera visita después de dormir espera a que arranque el contenedor (Django + gunicorn):
-  típicamente **unos segundos**. Las siguientes son normales. Se mide en la sub-fase 6.5.
+  típicamente **unos segundos**. Las siguientes son normales. Medido en 6.5: ver sección 10.
 - **Nada pesado al arrancar:** las migraciones (incluida la tabla de caché) corren en el
   *Pre-deploy Command* (una vez por deploy), no al despertar. El `CMD` de la imagen solo lanza gunicorn.
 - **El healthcheck** de Railway solo se usa al desplegar; despertar no lo vuelve a correr.
@@ -306,7 +302,7 @@ Cada una: construir → verificar yo mismo → commit(s) locales.
 |------|-----------|------------------|
 | **6.1 Producción** | `Dockerfile` raíz, gunicorn, WhiteNoise + SPA, settings de seguridad, throttling | Imagen de producción local + Postgres: headers, redirecciones, 429, SPA al recargar, admin con estáticos |
 | **6.2 Demo** | Cuentas demo, `GET /api/demo/`, tarjeta en el login, `reset_demo`, protecciones | Tests de pytest + prueba manual con Playwright |
-| **6.3 CI + E2E** | `ci.yml`, `docker-compose.e2e.yml`, 3 pruebas Playwright, cobertura ≥ 85 % | Corro los mismos comandos localmente (incluida la imagen de producción) |
+| **6.3 CI + E2E** | `ci.yml`, `docker-compose.e2e.yml`, 3 pruebas Playwright (4 desde 6.5), cobertura ≥ 85 % | Corro los mismos comandos localmente (incluida la imagen de producción) |
 | **6.4 Docs** | `.env.example`, este documento con lo final, README de despliegue | — |
 | **6.5 Post-deploy** | Lighthouse y revisión de headers contra `clearline.renzzogg.com` | Cuando me avises que el deploy está arriba |
 
@@ -329,4 +325,87 @@ docker compose -f docker-compose.e2e.yml exec web python manage.py reset_demo
 Verificado en la fase 6 con esa imagen: rutas de la SPA, 404 reales para API/assets faltantes,
 assets con gzip y caché `immutable`, admin con estáticos con hash, redirección a HTTPS salvo el
 healthcheck, HSTS, cookies `Secure`, host desconocido → 400, throttling por IP real,
-`check --deploy` limpio, modo demo de punta a punta y los 3 E2E.
+`check --deploy` limpio, modo demo de punta a punta y los E2E.
+
+---
+
+## 10. Revisión post-deploy (sub-fase 6.5, 2026-11-21)
+
+Medido desde Hermosillo con Lighthouse 12.8 (Chromium de Playwright, perfiles móvil y escritorio
+por defecto), con el servicio ya despierto. Reportes HTML/JSON en `.cache/lighthouse-6.5/` (ignorado
+por git).
+
+### Lighthouse
+
+| Página | Móvil (clearline.renzzogg.com, vía Cloudflare) | Escritorio (vía Cloudflare) | Móvil (`*.up.railway.app`, sin Cloudflare) |
+|--------|------------------|------------------|------------------|
+| `/`      | 80 · 100 · 82 · 100 | 98 · 100 · 81 · 100 | **97** · 100 · 100 · 100 |
+| `/book`  | 85 · 100 · 82 · 100 | 97 · 100 · 81 · 100 | **94** · 100 · 100 · 100 |
+| `/login` | 88 · 100 · 82 · 100 | 98 · 100 · 81 · 100 | **93–99** · 100 · 100 · 100 |
+
+(Rendimiento · Accesibilidad · Buenas prácticas · SEO.) CLS ≈ 0 en todas; TTFB del HTML ≈ 130 ms.
+
+**Causa de la diferencia:** con el proxy naranja, Cloudflare inyecta
+`/cdn-cgi/challenge-platform/scripts/jsd/main.js` (Bot Fight Mode / JavaScript Detections) en cada
+página: ~18 KB más de JS y trabajo en el hilo principal (LCP móvil 3.1–3.7 s en vez de 2.1–2.8 s) y
+dos avisos de APIs obsoletas (Buenas prácticas 82 en vez de 100). La app es la misma en ambas columnas.
+**Arreglo (tú, en Cloudflare):** poner el CNAME `clearline` en **DNS only (nube gris)**, como dice el
+paso C.2. Alternativa si quieres conservar el proxy: apagar *Security → Bots → Bot Fight Mode* y
+*JavaScript Detections*; pero el throttling seguiría viendo IPs de Cloudflare (ver abajo).
+
+### Headers y caché
+
+- ✅ HSTS (`max-age=3600`, sin `includeSubDomains`), `X-Content-Type-Options: nosniff`,
+  `X-Frame-Options: DENY`, `Referrer-Policy: same-origin`, `Cross-Origin-Opener-Policy`, cookies
+  `Secure; SameSite=Lax`, HTTP → HTTPS 301, sin páginas de debug, 404 reales para assets/API faltantes.
+- ✅ `index.html`: `Cache-Control: no-cache`. `/assets/*` (con hash): `public, max-age=315360000,
+  immutable`, gzip. Archivos sin hash (`/robots.txt`, `/favicon.svg`, `/img/*`): WhiteNoise manda 60 s;
+  Cloudflare lo sube a 4 h (su *Browser Cache TTL*); con nube gris vuelve a 60 s.
+- 🔧 **Arreglado:** `HEAD` respondía **405** en `/`, rutas de la SPA y `/api/health/` (las vistas usaban
+  `@require_GET`). Monitores de uptime y algunos crawlers usan `HEAD`. Ahora `@require_safe` (GET + HEAD).
+- 🔧 **Arreglado:** el throttling **no funcionaba en producción**: 12 logins fallidos seguidos → ningún
+  429 (ni por Cloudflare ni directo a Railway). El edge de Railway reconstruye `X-Forwarded-For` con un
+  salto propio que cambia en cada petición, así que con `NUM_PROXIES=1` cada intento parecía otro
+  cliente. Railway sobrescribe `X-Real-IP` con la IP real del cliente: la nueva clase
+  `apps.core.throttling.ClientIPScopedRateThrottle` usa ese header cuando
+  `DJANGO_CLIENT_IP_HEADER=X-Real-IP` (vacío en local/CI = comportamiento normal de DRF, porque ahí
+  nadie lo sobrescribe y se podría falsificar). Con el proxy naranja, `X-Real-IP` sería la IP de
+  Cloudflare: otra razón para la nube gris.
+- Sin CSP ni `Permissions-Policy`: se queda así para la demo (un CSP estricto requiere quitar los
+  estilos inline de Motion y la hoja de Google Fonts; no vale la pena ahora).
+
+### Flujo demo en producción
+
+Las 4 pruebas E2E pasan contra `https://clearline.renzzogg.com`. Además, por API: el paciente demo solo
+ve sus propias citas, la cita de otro paciente → 404, `/api/patients/` como paciente → 403, citas sin
+sesión → 401.
+
+### Arranque en frío (App Sleeping)
+
+**No se pudo medir: el servicio no se durmió.** Dos intentos sin que yo mandara tráfico (16 min y
+30 min, 21:33–22:20 UTC): la primera petición tardó 0.22 s y 0.21 s, igual que con el servicio
+despierto. App Sleeping solo duerme el servicio si **no envía tráfico de salida** durante ~10 min, y
+cualquier visita (incluidos bots que lleguen por el dominio público) cuenta. Qué revisar en Railway →
+`web`: *HTTP Logs* entre esas horas (¿hubo peticiones de alguien más?) y si el deployment llega a
+mostrarse como *Sleeping*. Cuando duerma, mídelo con
+`curl -o /dev/null -w '%{time_total}\n' https://clearline.renzzogg.com/` tras ≥ 15 min sin tráfico.
+
+### Pendientes tuyos (en orden)
+
+1. Railway → `web` y `demo-reset` → *Variables*: agregar `DJANGO_CLIENT_IP_HEADER=X-Real-IP`.
+2. Cloudflare → DNS → `clearline`: **DNS only (nube gris)**. Railway emitirá su propio certificado;
+   espera a que el dominio salga verificado en *Networking*.
+3. `git push` (despliega `HEAD` + throttling).
+4. Verificar: 11 logins fallidos seguidos en un minuto → el 11.º responde **429**; `curl -I` a `/` → 200;
+   `server:` ya no dice `cloudflare`.
+5. Revisar por qué `web` no se duerme (arriba, "Arranque en frío").
+6. Después, HSTS: ver la recomendación de abajo.
+
+### Cuándo subir `DJANGO_SECURE_HSTS_SECONDS` a `31536000`
+
+Cuando el dominio ya sirva HTTPS directo desde Railway (pasos 1–4 hechos) y lleve **unos días (≈ 1
+semana) sin errores de certificado** con `3600`. Riesgo real: con HSTS de un año, si el certificado
+falla los navegadores que ya visitaron no dejan "continuar de todos modos" durante un año. Como no lleva
+`includeSubDomains` ni `preload`, solo afecta a `clearline.renzzogg.com` y se puede bajar de nuevo (los
+navegadores lo actualizan en la siguiente visita por HTTPS). No lo subas *antes* del cambio de nube
+naranja → gris: el certificado cambia de Cloudflare a Railway en ese momento.
