@@ -2,12 +2,16 @@
 // Portfolio screenshots of the live demo (README + docs/screenshots/), Phase 7.
 //
 //   node scripts/capture-screenshots.mjs [--base URL] [--raw DIR] [--out DIR] [--book]
+//        [--only name,name] [--hide-upcoming-kpi]
 //
 // Uses only the public demo accounts: their passwords come from the public GET /api/demo/
 // at runtime (never hardcoded, never printed). Raw PNGs (DPR 2) go to --raw (default
 // .cache/shots/phase7/, git-ignored); optimized WebP go to --out (default docs/screenshots/).
 // Without --book nothing is written to the API; with --book the demo patient submits exactly
 // one booking to capture the confirmation (the nightly demo reset removes it).
+// --only captures just the named shots (never books). --hide-upcoming-kpi hides the
+// "Upcoming" card on the Insights shot (used for the Upwork images: on a Sunday, or after
+// hours, every Insights range ends today and that KPI is 0).
 //
 // Before any dashboard shot it checks, read-only, that every patient in the visible weeks
 // has a seed/fake email domain, so no visitor's data ends up in a screenshot.
@@ -24,12 +28,17 @@ const { values: args } = parseArgs({
     raw: { type: "string", default: path.join(REPO, ".cache/shots/phase7") },
     out: { type: "string", default: path.join(REPO, "docs/screenshots") },
     book: { type: "boolean", default: false },
+    only: { type: "string" },
+    "hide-upcoming-kpi": { type: "boolean", default: false },
   },
 });
 const BASE = args.base.replace(/\/$/, "");
 const SAFE_EMAIL = /@(clearline\.example|clearline\.test|example\.com)$/i;
 const DESKTOP = { width: 1440, height: 900 };
 const MOBILE = { width: 390, height: 844 };
+const ONLY = args.only ? new Set(args.only.split(",").map((name) => name.trim())) : null;
+const want = (...names) => !ONLY || names.some((name) => ONLY.has(name));
+const BOOK = args.book && !ONLY;
 
 fs.mkdirSync(args.raw, { recursive: true });
 fs.mkdirSync(args.out, { recursive: true });
@@ -180,6 +189,7 @@ try {
     ["landing-hero", DESKTOP, DESKTOP.width],
     ["mobile-landing-hero", MOBILE, MOBILE.width],
   ]) {
+    if (!want(name)) continue;
     const page = await newPage(browser, viewport, "no-preference");
     await page.goto(BASE);
     await page.getByRole("heading", { level: 1 }).waitFor();
@@ -198,6 +208,7 @@ try {
     ["", DESKTOP, DESKTOP.width],
     ["mobile-", MOBILE, MOBILE.width],
   ]) {
+    if (!want(`${prefix}booking-availability`, ...(prefix ? [] : ["booking-service"]))) continue;
     const page = await newPage(browser, viewport);
     await pickServiceDentistAndSlot(page, {
       onService: async () => {
@@ -217,7 +228,7 @@ try {
   }
 
   // Signed-in demo patient: "Booking as …", the review step and (with --book) one booking.
-  {
+  if (want("patient-details", "patient-review", "patient-booked")) {
     const page = await newPage(browser, DESKTOP);
     await signInAsDemo(page, "Patient");
     await pickServiceDentistAndSlot(page);
@@ -229,7 +240,7 @@ try {
     await confirm.waitFor();
     await settle(page);
     await shot(page, "patient-review", DESKTOP.width);
-    if (args.book) {
+    if (BOOK) {
       await confirm.click();
       await page.getByRole("heading", { name: "You're booked!" }).waitFor();
       await settle(page, 1200);
@@ -240,11 +251,14 @@ try {
   }
 
   // Front desk dashboard, after the privacy check.
-  await assertDashboardIsSafe();
+  if (want("reception-schedule", "reception-insights", "mobile-reception-schedule")) {
+    await assertDashboardIsSafe();
+  }
   for (const [prefix, viewport, width] of [
     ["", DESKTOP, DESKTOP.width],
     ["mobile-", MOBILE, MOBILE.width],
   ]) {
+    if (!want(`${prefix}reception-schedule`, ...(prefix ? [] : ["reception-insights"]))) continue;
     const page = await newPage(browser, viewport);
     await signInAsDemo(page, "Front desk");
     await page.getByRole("heading", { name: "Schedule" }).waitFor();
@@ -254,20 +268,33 @@ try {
     await page.getByRole("button", { name: "Next" }).click();
     await page.waitForLoadState("networkidle");
     await settle(page);
-    await shot(page, `${prefix}reception-schedule`, width);
-    if (!prefix) {
+    if (want(`${prefix}reception-schedule`)) await shot(page, `${prefix}reception-schedule`, width);
+    if (!prefix && want("reception-insights")) {
       await page.goto(`${BASE}/dashboard/insights`);
       await page.getByRole("heading", { name: "Insights" }).waitFor();
       await page.getByRole("button", { name: "Last 7 days" }).click();
       await page.waitForLoadState("networkidle");
       await settle(page, 1500);
+      if (args["hide-upcoming-kpi"]) {
+        // Hide only that card; the other three fill the row (3 columns instead of 4).
+        await page.evaluate(() => {
+          const label = [...document.querySelectorAll("dl *")].find(
+            (el) => el.children.length === 0 && el.textContent?.startsWith("Upcoming"),
+          );
+          const card = label?.closest(".rounded-2xl");
+          if (!card) throw new Error("Upcoming KPI card not found");
+          card.style.display = "none";
+          card.parentElement.style.gridTemplateColumns = "repeat(3, minmax(0, 1fr))";
+        });
+        await settle(page, 300);
+      }
       await shot(page, "reception-insights", width);
     }
     await page.context().close();
   }
 
   // Swagger UI (public, no token entered).
-  {
+  if (want("swagger")) {
     const page = await newPage(browser, DESKTOP);
     await page.goto(`${BASE}/api/docs/`);
     await page.locator(".swagger-ui .opblock").first().waitFor();
