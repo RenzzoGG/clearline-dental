@@ -245,7 +245,7 @@ Resultado y desviaciones: sección 7 de `MOTION-PLAN.md` (móvil 93/94/93, escri
 - Deploy a Railway: Postgres administrado + backend (gunicorn) + frontend estático.
   Variables de entorno configuradas en Railway (nunca en el repo).
 
-### Fase 7 — Portafolio
+### Fase 7 — Portafolio ✅
 - README: qué es, stack, diagrama de arquitectura (Mermaid), cómo correrlo, decisiones técnicas.
 - Screenshots / GIFs del sitio, reserva y dashboard.
 - Imágenes para Upwork (portada + 2–3 capturas con mockup).
