@@ -148,6 +148,7 @@ Respuesta al exceder: `429` con `Retry-After`. Detrás del proxy de Railway, la 
 | Ajuste | Valor |
 |--------|-------|
 | Source → Root Directory | *(vacío = raíz del repo)* |
+| Source → Wait for CI | **Encendido**: Railway solo despliega un commit de `main` cuando el workflow **CI** pasa |
 | Build → Builder | Dockerfile (se detecta solo con `Dockerfile` en la raíz) |
 | Deploy → Pre-deploy Command | `python manage.py migrate --noinput` (también crea la tabla de caché del throttling) |
 | Deploy → Custom Start Command | *(vacío: usa el `CMD` del Dockerfile = gunicorn)* |
