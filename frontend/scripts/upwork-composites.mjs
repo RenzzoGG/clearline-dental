@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 // Upwork portfolio images (Phase 7): 1600x1200 PNG composites built from docs/screenshots/.
 //
-//   node scripts/upwork-composites.mjs [--shots DIR] [--out DIR]
+//   node scripts/upwork-composites.mjs [--shots DIR] [--override DIR] [--out DIR]
+//
+// --override: a folder whose shots replace same-named ones from --shots (e.g. an Insights
+// capture made with capture-screenshots.mjs --only reception-insights --hide-upcoming-kpi).
+// URL bars show only the brand and the path: no real domain appears in the images.
 //
 // Each image is an inline HTML template (brand background, CSS-drawn browser/phone frames,
 // short caption) rendered by Playwright's Chromium. Output goes to docs/upwork/, which is
@@ -16,14 +20,22 @@ const REPO = path.resolve(import.meta.dirname, "../..");
 const { values: args } = parseArgs({
   options: {
     shots: { type: "string", default: path.join(REPO, "docs/screenshots") },
+    override: { type: "string" },
     out: { type: "string", default: path.join(REPO, "docs/upwork") },
   },
 });
 fs.mkdirSync(args.out, { recursive: true });
 
 /** A screenshot as a data URI, so the template needs no file server. */
-const img = (name) =>
-  `data:image/webp;base64,${fs.readFileSync(path.join(args.shots, `${name}.webp`)).toString("base64")}`;
+function img(name) {
+  const override = args.override && path.join(args.override, `${name}.webp`);
+  const file =
+    override && fs.existsSync(override) ? override : path.join(args.shots, `${name}.webp`);
+  return `data:image/webp;base64,${fs.readFileSync(file).toString("base64")}`;
+}
+
+/** Desktop shots are 1440 px wide (capture-screenshots.mjs). */
+const SHOT_WIDTH = 1440;
 
 const FONTS =
   "https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;1,400&family=Plus+Jakarta+Sans:wght@400..800&display=block";
@@ -47,6 +59,9 @@ const BASE_CSS = `
   .url { margin-left: 16px; flex: 1; height: 26px; border-radius: 13px; background: #fff; font-size: 14px;
     color: #66747f; display: flex; align-items: center; padding-left: 14px; }
   .browser img, .phone img { display: block; width: 100%; }
+  .browser .view { position: relative; overflow: hidden; }
+  .browser .view img { position: absolute; left: 0; top: 0; max-width: none; }
+  .url b { color: #0b3b37; font-weight: 700; margin-right: 6px; }
   .phone { position: absolute; border-radius: 46px; padding: 12px; background: #0b1f1d; overflow: hidden;
     box-shadow: 0 40px 80px -24px rgba(6,37,35,.55); }
   .phone img { border-radius: 34px; }
@@ -55,8 +70,20 @@ const BASE_CSS = `
   .tag.coral { background: #c4472a; }
 `;
 
-const browser = (src, url, style) =>
-  `<div class="browser" style="${style}"><div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">${url}</span></div><img src="${img(src)}"></div>`;
+/**
+ * A browser frame at (left, top), `width` px wide, showing `crop` ({x, y, w, h} in shot
+ * pixels) of a desktop shot, or the whole shot without a crop. The URL bar shows only the
+ * brand and the path.
+ */
+function browser(src, pathname, { left, top, width, crop }) {
+  const bar = `<div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url"><b>Clearline Dental</b>· ${pathname}</span></div>`;
+  let body = `<img src="${img(src)}">`;
+  if (crop) {
+    const scale = width / crop.w;
+    body = `<div class="view" style="height:${Math.round(crop.h * scale)}px"><img src="${img(src)}" style="width:${SHOT_WIDTH * scale}px; transform: translate(${-crop.x * scale}px, ${-crop.y * scale}px)"></div>`;
+  }
+  return `<div class="browser" style="left:${left}px; top:${top}px; width:${width}px;">${bar}${body}</div>`;
+}
 const phone = (src, style) => `<div class="phone" style="${style}"><img src="${img(src)}"></div>`;
 const tag = (text, style, extra = "") => `<div class="tag ${extra}" style="${style}">${text}</div>`;
 
@@ -68,28 +95,29 @@ const PAGES = {
       <p class="caption">Django REST API + React/TypeScript SPA, tested end to end and deployed on Railway.</p>
       ${tag("Django · DRF · PostgreSQL", "left:80px; top:360px;")}
       ${tag("React · TypeScript · Motion", "left:390px; top:360px;", "coral")}
-      ${browser("landing-hero", "clearline.renzzogg.com", "left:80px; top:450px; width:1100px;")}
+      ${browser("landing-hero", "/", { left: 80, top: 450, width: 1100 })}
       ${phone("mobile-landing-hero", "left:1170px; top:400px; width:340px;")}
     </div>`,
   "02-booking-flow": `
     <div class="stage">
       <div class="eyebrow">Patient booking flow</div>
       <h1>Book a visit in <em>five steps</em></h1>
-      <p class="caption">Live availability per dentist, no double bookings (enforced by Postgres), works on any phone.</p>
-      ${browser("booking-availability", "clearline.renzzogg.com/book", "left:80px; top:350px; width:900px;")}
-      ${browser("patient-booked", "clearline.renzzogg.com/book", "left:600px; top:690px; width:620px;")}
-      ${phone("mobile-booking-availability", "left:1200px; top:300px; width:330px;")}
-      ${tag("① Pick a time", "left:96px; top:300px;")}
-      ${tag("② Confirmed", "left:1000px; top:636px;", "coral")}
+      <p class="caption">Live availability per dentist, and no double bookings (enforced by Postgres).</p>
+      ${tag("① Pick a day and time", "left:80px; top:290px;")}
+      ${browser("booking-availability", "/book", { left: 80, top: 346, width: 920, crop: { x: 140, y: 90, w: 1160, h: 760 } })}
+      ${tag("② You're booked", "left:1040px; top:400px;", "coral")}
+      ${browser("patient-booked", "/book", { left: 1040, top: 456, width: 480, crop: { x: 430, y: 120, w: 580, h: 455 } })}
     </div>`,
   "03-dashboards": `
     <div class="stage">
       <div class="eyebrow">Front-desk dashboard</div>
       <h1>Schedule and <em>insights</em> for the clinic</h1>
       <p class="caption">Week and day views by dentist, one-click confirm / complete / cancel, and charts with Recharts.</p>
-      ${browser("reception-schedule", "clearline.renzzogg.com/dashboard", "left:80px; top:350px; width:980px;")}
-      ${browser("reception-insights", "clearline.renzzogg.com/dashboard/insights", "left:640px; top:700px; width:640px;")}
-      ${phone("mobile-reception-schedule", "left:1210px; top:300px; width:320px;")}
+      ${browser("reception-schedule", "/dashboard", { left: 80, top: 300, width: 880, crop: { x: 80, y: 80, w: 1280, h: 540 } })}
+      ${tag("Week & day views per dentist", "left:1010px; top:330px;")}
+      ${tag("Pending → Confirmed → Completed", "left:1010px; top:396px;")}
+      ${tag("Insights for 7 / 30 / 90 days", "left:1010px; top:462px;", "coral")}
+      ${browser("reception-insights", "/dashboard/insights", { left: 620, top: 640, width: 900, crop: { x: 80, y: 80, w: 1280, h: 635 } })}
     </div>`,
   "04-architecture-tech": `
     <style>
@@ -137,7 +165,7 @@ const PAGES = {
 
       <div class="chips">
         <span class="chip k">98% backend test coverage</span>
-        <span class="chip k">Lighthouse 100 accessibility</span>
+        <span class="chip k">Lighthouse accessibility 100 · mobile &amp; desktop</span>
         <span class="chip k">JWT rotation + blacklist</span>
         <span class="chip">Python 3.13 · Django 5.2</span><span class="chip">Django REST Framework</span>
         <span class="chip">PostgreSQL 17</span><span class="chip">React 19 · TypeScript</span>
