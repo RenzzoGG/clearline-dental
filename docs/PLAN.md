@@ -236,7 +236,7 @@ Motion (sin GSAP), presupuestos y sub-fases 5b.1–5b.7. Incluye llevar `/book` 
 móvil ≥ 90.
 Resultado y desviaciones: sección 7 de `MOTION-PLAN.md` (móvil 93/94/93, escritorio 100/100/100).
 
-### Fase 6 — Tests, CI y deploy
+### Fase 6 — Tests, CI y deploy ✅
 - Backend: pytest con cobertura (meta ≥ 85%).
 - Frontend: Vitest + Testing Library para componentes clave (stepper, cambio de estado).
 - 3–5 tests E2E con Playwright: reservar cita, login de recepción, confirmar/completar cita.

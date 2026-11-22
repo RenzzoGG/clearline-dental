@@ -180,8 +180,8 @@ Variables* del proyecto).
 | `DEMO_RECEPTIONIST_PASSWORD` | Público por diseño | Contraseña de `demo-reception`; se muestra en el login |
 | `DEMO_PATIENT_PASSWORD` | Público por diseño | Contraseña del paciente demo; se muestra en el login |
 | `DATABASE_URL` | Referencia | `${{Postgres.DATABASE_URL}}` (red privada de Railway) |
-| `DJANGO_ALLOWED_HOSTS` | Config | `clearline.renzzogg.com,<tu-servicio>.up.railway.app,healthcheck.railway.app` |
-| `DJANGO_CSRF_TRUSTED_ORIGINS` | Config | `https://clearline.renzzogg.com,https://<tu-servicio>.up.railway.app` |
+| `DJANGO_ALLOWED_HOSTS` | Config | `clearline.renzzogg.com,healthcheck.railway.app` (sin `*.up.railway.app`, a propósito: ver abajo) |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | Config | `https://clearline.renzzogg.com` |
 | `DJANGO_HTTPS` | Config | `true` (redirección a HTTPS, cookies seguras, HSTS) |
 | `DJANGO_SECURE_HSTS_SECONDS` | Config | `3600` al principio; `31536000` cuando todo funcione |
 | `DJANGO_NUM_PROXIES` | Config | `1` (respaldo si falta el header de abajo) |
@@ -192,6 +192,14 @@ Variables* del proyecto).
 `PORT` lo pone Railway solo. `healthcheck.railway.app` debe estar en `DJANGO_ALLOWED_HOSTS`: es el
 `Host` con el que llega el healthcheck de Railway. `.env.example` tiene todos los nombres con
 placeholders.
+
+**Dominio canónico único (decisión de la fase 6):** `<tu-servicio>.up.railway.app` **no** va en
+`DJANGO_ALLOWED_HOSTS`, así que Django responde **400** a cualquier petición con ese `Host`. Es a
+propósito: un solo dominio público (`clearline.renzzogg.com`) evita contenido duplicado para buscadores,
+mantiene HSTS y cookies atados a un solo origen y deja una sola URL que monitorear. Alternativa
+descartada: redirigir con 301 desde `*.up.railway.app` (requiere middleware propio para ganar poco en
+una demo). Si alguna vez hace falta probar sin el dominio propio, agrégalo temporalmente a ambas
+variables y quítalo después.
 
 ---
 
@@ -235,8 +243,8 @@ Todo en una transacción: si algo falla, la base queda como estaba. Corre como s
    contraseñas demo). Para `DATABASE_URL` usa la referencia `${{Postgres.DATABASE_URL}}`.
 4. En `web` → *Settings*: pon los ajustes de la tabla de la sección 4 (pre-deploy, healthcheck,
    restart policy, App Sleeping encendido).
-5. *Networking → Generate Domain* (para probar con `*.up.railway.app`) y luego
-   *Custom Domain → `clearline.renzzogg.com`*. Railway te mostrará el registro CNAME a crear.
+5. *Networking → Generate Domain* (opcional; `*.up.railway.app` responde 400 a propósito, ver
+   sección 4) y luego *Custom Domain → `clearline.renzzogg.com`*. Railway te mostrará el registro CNAME a crear.
 6. Despliega y revisa en *Deployments* que el healthcheck pase.
 7. *New → GitHub Repo* otra vez (mismo repo) → nómbralo `demo-reset` → mismas variables (o
    "Shared Variables") → *Start Command* y *Cron Schedule* de la sección 4.
@@ -344,6 +352,8 @@ por git).
 | `/login` | 88 · 100 · 82 · 100 | 98 · 100 · 81 · 100 | **93–99** · 100 · 100 · 100 |
 
 (Rendimiento · Accesibilidad · Buenas prácticas · SEO.) CLS ≈ 0 en todas; TTFB del HTML ≈ 130 ms.
+La columna `*.up.railway.app` se midió con ese host habilitado temporalmente; hoy responde 400 a
+propósito (dominio canónico único, sección 4).
 
 **Causa de la diferencia:** con el proxy naranja, Cloudflare inyecta
 `/cdn-cgi/challenge-platform/scripts/jsd/main.js` (Bot Fight Mode / JavaScript Detections) en cada
